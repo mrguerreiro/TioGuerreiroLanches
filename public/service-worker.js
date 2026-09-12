@@ -1,14 +1,14 @@
 const CACHE_NAME = 'tio-guerreiro-v2';
 const ARQUIVOS_ESSENCIAIS = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/api.js',
-  '/js/app.js',
-  '/manifest.json',
-  '/img/logo.jpeg',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  './',
+  'index.html',
+  'css/style.css',
+  'js/api.js',
+  'js/app.js',
+  'manifest.json',
+  'img/logo.jpeg',
+  'icons/icon-192.png',
+  'icons/icon-512.png'
 ];
 
 self.addEventListener('install', (evento) => {
@@ -31,7 +31,7 @@ self.addEventListener('fetch', (evento) => {
   const url = new URL(evento.request.url);
 
   // Nunca cachear chamadas de API nem o painel administrativo: sempre buscar versão atual.
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin') || url.pathname.startsWith('/js/admin.js')) {
+  if (url.pathname.includes('/api/') || url.pathname.includes('/admin') || url.pathname.includes('admin.js')) {
     return;
   }
 

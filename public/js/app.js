@@ -201,7 +201,7 @@ iniciar();
 
 // PWA: registro do service worker e prompt de instalação
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js'));
+  window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
 }
 
 let promptInstalacao = null;

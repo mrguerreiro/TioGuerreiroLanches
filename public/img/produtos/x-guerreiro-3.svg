@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a1a1f"/>
+      <stop offset="1" stop-color="#B5121B"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <g transform="translate(60,70)">
+    <ellipse cx="90" cy="30" rx="90" ry="28" fill="#FDC70C"/>
+    <path d="M0 30 Q90 -10 180 30 L180 45 L0 45 Z" fill="#F7941D"/>
+    <rect x="0" y="55" width="180" height="18" rx="9" fill="#2E7D32"/>
+    <rect x="0" y="75" width="180" height="24" fill="#8B4513"/>
+    <rect x="0" y="101" width="180" height="16" rx="6" fill="#FFD54F"/>
+    <rect x="0" y="119" width="180" height="26" rx="13" fill="#F4A300"/>
+  </g>
+  <text x="200" y="245" text-anchor="middle" font-family="Verdana, Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF">X Guerreiro 3</text>
+  <text x="200" y="270" text-anchor="middle" font-family="Verdana, Arial, sans-serif" font-size="12" fill="#FFE0B2">Imagem meramente ilustrativa</text>
+</svg>

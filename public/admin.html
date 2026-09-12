@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel Administrativo - Tio Guerreiro Lanches</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/icons/favicon-32.png">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  body { padding-bottom: 20px; }
+  .painel { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+  th { background: var(--vermelho); color: #fff; }
+  .aba-botoes { display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+  .aba-botoes button { padding: 8px 16px; border-radius: 8px; border: 2px solid var(--vermelho); background: #fff; color: var(--vermelho); font-weight: bold; }
+  .aba-botoes button.ativa { background: var(--vermelho); color: #fff; }
+  .aba { display: none; }
+  .aba.ativa { display: block; }
+  .caixa-login { max-width: 360px; margin: 60px auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: var(--sombra); }
+  .form-item { background: #fff; padding: 14px; border-radius: 10px; margin-bottom: 16px; box-shadow: var(--sombra); }
+  .form-item .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+  .acoes-item { display: flex; gap: 6px; }
+  .acoes-item button { padding: 5px 8px; border-radius: 6px; border: none; font-size: 0.8rem; color: #fff; }
+  .btn-pausar { background: #e0a800; }
+  .btn-excluir { background: #c0392b; }
+  .btn-editar { background: #2a7ac0; }
+  .status-pausado { color: #b26a00; font-weight: bold; }
+  .linha-item-admin { display: flex; gap: 12px; align-items: center; }
+  .foto-item-admin { width: 70px; height: 52px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+  .info-item-admin { flex: 1; }
+  .descricao-item-admin { margin: 4px 0; font-size: 0.85rem; color: #777; }
+  .rotulo-trocar-foto { display: inline-block; margin: 4px 0 0; font-size: 0.8rem; font-weight: normal; color: #2a7ac0; cursor: pointer; }
+  .erro-foto-item { display: block; font-size: 0.78rem; color: #c0392b; }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <img class="logo" src="/img/logo.jpeg" alt="Logo Tio Guerreiro Lanches">
+  <div class="titulo">
+    <h1>Painel Administrativo</h1>
+    <p>Tio Guerreiro Lanches</p>
+  </div>
+</header>
+
+<div id="tela-login" class="caixa-login">
+  <h2>Entrar</h2>
+  <form id="form-login">
+    <label for="campo-login-usuario">Usuário</label>
+    <input id="campo-login-usuario" name="usuario" required>
+    <label for="campo-login-senha">Senha</label>
+    <input id="campo-login-senha" name="senha" type="password" required>
+    <div id="erro-login"></div>
+    <button type="submit" class="btn largura-total mt-12">Entrar</button>
+  </form>
+</div>
+
+<div id="tela-painel" class="painel oculto-tela">
+  <div class="aba-botoes">
+    <button data-aba="aba-pedidos" class="ativa">Pedidos</button>
+    <button data-aba="aba-cardapio">Cardápio</button>
+    <button data-aba="aba-config">Configurações</button>
+    <button id="btn-logout" type="button" class="btn-sair">Sair</button>
+  </div>
+
+  <section id="aba-pedidos" class="aba ativa">
+    <h2>Pedidos recebidos</h2>
+    <button class="btn secundario" id="btn-atualizar-pedidos">Atualizar</button>
+    <table>
+      <thead><tr><th>Pedido</th><th>Cliente</th><th>Tipo</th><th>Total</th><th>Pagamento</th><th>Status</th><th></th></tr></thead>
+      <tbody id="tabela-pedidos"></tbody>
+    </table>
+  </section>
+
+  <section id="aba-cardapio" class="aba">
+    <h2>Cardápio</h2>
+
+    <div class="form-item">
+      <h3>Adicionar novo item</h3>
+      <form id="form-novo-item">
+        <div class="campos">
+          <select name="categoria" required>
+            <option value="lanche">Lanche</option>
+            <option value="bebida">Bebida</option>
+          </select>
+          <input name="nome" placeholder="Nome do item" required>
+          <input name="preco" type="number" step="0.01" min="0" placeholder="Preço (R$)" required>
+          <input name="imagem" placeholder="URL da imagem (opcional)">
+        </div>
+        <textarea name="descricao" placeholder="Descrição" class="mt-8"></textarea>
+        <button type="submit" class="btn mt-8">Adicionar item</button>
+      </form>
+      <p class="texto-ajuda">Se nenhuma imagem for informada, uma imagem ilustrativa é gerada automaticamente.</p>
+    </div>
+
+    <h3>Lanches</h3>
+    <div id="lista-admin-lanches"></div>
+    <h3>Bebidas</h3>
+    <div id="lista-admin-bebidas"></div>
+  </section>
+
+  <section id="aba-config" class="aba">
+    <h2>Configurações da loja</h2>
+    <form id="form-config" class="form-item">
+      <label>Nome da loja</label>
+      <input name="nomeLoja">
+      <label>Horário de funcionamento</label>
+      <input name="horarioFuncionamento">
+      <label>WhatsApp (com DDI+DDD, só números)</label>
+      <input name="whatsapp">
+      <label>Taxa de entrega (R$)</label>
+      <input name="taxaEntrega" type="number" step="0.01" min="0">
+      <label><input type="checkbox" name="aceitaRetirada" class="checkbox-inline"> Aceitar retirada</label>
+      <label><input type="checkbox" name="aceitaEntrega" class="checkbox-inline"> Aceitar entrega</label>
+      <label><input type="checkbox" name="aceitaPagamentoEntrega" class="checkbox-inline"> Aceitar pagamento na entrega</label>
+      <label><input type="checkbox" name="aceitaPagamentoOnline" class="checkbox-inline"> Aceitar pagamento online (PagSeguro)</label>
+      <button type="submit" class="btn mt-10">Salvar configurações</button>
+    </form>
+  </section>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

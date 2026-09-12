@@ -1,0 +1,10 @@
+{
+  "taxaEntrega": 0,
+  "aceitaEntrega": true,
+  "aceitaRetirada": true,
+  "aceitaPagamentoEntrega": true,
+  "aceitaPagamentoOnline": true,
+  "nomeLoja": "Tio Guerreiro Lanches",
+  "whatsapp": "5514996755092",
+  "horarioFuncionamento": "Terça a domingo, das 18h às 23h"
+}

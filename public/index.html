@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tio Guerreiro Lanches - Peça Online</title>
+<meta name="description" content="Cardápio online do Tio Guerreiro Lanches. Peça para retirar ou receber em casa.">
+<meta name="theme-color" content="#B5121B">
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tio Guerreiro">
+<meta name="mobile-web-app-capable" content="yes">
+
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="topo">
+  <img class="logo" src="/img/logo.jpeg" alt="Logo Tio Guerreiro Lanches">
+  <div class="titulo">
+    <h1>Tio Guerreiro Lanches</h1>
+    <p id="horario-funcionamento">Desde 1998</p>
+  </div>
+</header>
+
+<div class="aviso-ilustrativo">
+  📷 As fotos dos produtos são imagens meramente ilustrativas.
+</div>
+
+<main>
+  <section id="lista-lanches">
+    <h2 class="categoria-titulo">Lanches</h2>
+    <div class="grade-produtos" id="grade-lanches"></div>
+  </section>
+
+  <section id="lista-bebidas">
+    <h2 class="categoria-titulo">Bebidas</h2>
+    <div class="grade-produtos" id="grade-bebidas"></div>
+  </section>
+</main>
+
+<footer class="rodape-site">
+  <p>Tio Guerreiro Lanches — Pedidos apenas pelo site.</p>
+  <p><a href="/admin">Painel administrativo</a></p>
+</footer>
+
+<button class="btn btn-instalar oculta" id="btn-instalar">📲 Instalar app</button>
+
+<div class="barra-carrinho oculta" id="barra-carrinho">
+  <span id="resumo-carrinho">0 itens — R$ 0,00</span>
+  <button class="btn" id="btn-ver-carrinho">Ver carrinho</button>
+</div>
+
+<!-- Modal do carrinho -->
+<div class="modal-fundo oculta" id="modal-carrinho">
+  <div class="modal">
+    <h2>Seu carrinho</h2>
+    <div id="itens-carrinho"></div>
+    <div class="total-final"><span>Total</span><span id="total-carrinho">R$ 0,00</span></div>
+    <button type="button" class="btn largura-total" id="btn-ir-checkout">Continuar pedido</button>
+    <button type="button" class="btn secundario largura-total mt-8" id="btn-fechar-carrinho">Continuar comprando</button>
+  </div>
+</div>
+
+<!-- Modal do checkout -->
+<div class="modal-fundo oculta" id="modal-checkout">
+  <div class="modal">
+    <h2>Finalizar pedido</h2>
+    <form id="form-checkout">
+      <label>Como você quer receber?</label>
+      <div class="opcoes-toggle">
+        <label><input type="radio" name="tipoEntrega" value="retirada" checked><span>🏠 Retirar na loja</span></label>
+        <label><input type="radio" name="tipoEntrega" value="entrega"><span>🛵 Receber em casa</span></label>
+      </div>
+
+      <label for="campo-nome">Nome completo</label>
+      <input id="campo-nome" name="nome" required placeholder="Seu nome">
+
+      <label for="campo-telefone">Telefone / WhatsApp</label>
+      <input id="campo-telefone" name="telefone" required placeholder="(14) 90000-0000">
+
+      <div id="campos-endereco" class="oculto-tela">
+        <label for="campo-rua">Rua</label>
+        <input id="campo-rua" name="rua" placeholder="Nome da rua">
+        <label for="campo-numero">Número</label>
+        <input id="campo-numero" name="numero" placeholder="Número">
+        <label for="campo-complemento">Complemento (opcional)</label>
+        <input id="campo-complemento" name="complemento" placeholder="Apto, bloco, ponto de referência">
+        <label for="campo-bairro">Bairro</label>
+        <input id="campo-bairro" name="bairro" placeholder="Bairro">
+        <label for="campo-cidade">Cidade</label>
+        <input id="campo-cidade" name="cidade" placeholder="Cidade">
+      </div>
+
+      <label>Forma de pagamento</label>
+      <div class="opcoes-toggle">
+        <label><input type="radio" name="formaPagamento" value="entrega_local" checked><span>💵 Na entrega/retirada</span></label>
+        <label><input type="radio" name="formaPagamento" value="online"><span>💳 Pagar agora (PagSeguro)</span></label>
+      </div>
+
+      <div class="total-final"><span>Total do pedido</span><span id="total-checkout">R$ 0,00</span></div>
+      <div id="erro-checkout"></div>
+
+      <button class="btn largura-total mt-10" type="submit">Confirmar pedido</button>
+      <button class="btn secundario largura-total mt-8" type="button" id="btn-voltar-carrinho">Voltar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de confirmação -->
+<div class="modal-fundo oculta" id="modal-confirmacao">
+  <div class="modal">
+    <div class="mensagem-sucesso" id="mensagem-confirmacao"></div>
+    <button type="button" class="btn largura-total mt-14" id="btn-fechar-confirmacao">Fazer novo pedido</button>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

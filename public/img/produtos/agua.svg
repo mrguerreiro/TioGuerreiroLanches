@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a0d12"/>
+      <stop offset="1" stop-color="#B5121B"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <g transform="translate(120,60)">
+    <path d="M40 0 C70 45 80 65 80 90 A40 40 0 1 1 0 90 C0 65 10 45 40 0 Z" fill="#4FC3F7"/>
+  </g>
+  <text x="200" y="245" text-anchor="middle" font-family="Verdana, Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF">Água 500ml</text>
+  <text x="200" y="270" text-anchor="middle" font-family="Verdana, Arial, sans-serif" font-size="12" fill="#FFE0B2">Imagem meramente ilustrativa</text>
+</svg>

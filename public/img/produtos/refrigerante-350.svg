@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a0d12"/>
+      <stop offset="1" stop-color="#B5121B"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <g transform="translate(120,60)">
+    <rect x="0" y="0" width="70" height="150" rx="14" fill="#C1272D"/>
+    <rect x="0" y="0" width="70" height="35" rx="14" fill="#8a1a1f"/>
+    <rect x="10" y="45" width="50" height="18" fill="#FDC70C"/>
+  </g>
+  <text x="200" y="245" text-anchor="middle" font-family="Verdana, Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF">Refrigerante 350ml</text>
+  <text x="200" y="270" text-anchor="middle" font-family="Verdana, Arial, sans-serif" font-size="12" fill="#FFE0B2">Imagem meramente ilustrativa</text>
+</svg>

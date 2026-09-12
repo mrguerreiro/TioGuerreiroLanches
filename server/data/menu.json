@@ -1,0 +1,218 @@
+[
+  {
+    "id": "lanche-dog-simples",
+    "categoria": "lanche",
+    "nome": "Dog Simples",
+    "descricao": "Uma salsicha e meia, vinagrete e batata palha.",
+    "preco": 12,
+    "imagem": "/img/produtos/dog-simples.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-dog-especial",
+    "categoria": "lanche",
+    "nome": "Dog Especial",
+    "descricao": "2 salsichas, bacon, calabresa, queijo, vinagrete e batata palha.",
+    "preco": 22,
+    "imagem": "/img/produtos/dog-especial.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-hamburguer-simples",
+    "categoria": "lanche",
+    "nome": "Hambúrguer Simples",
+    "descricao": "Hambúrguer, vinagrete e batata palha.",
+    "preco": 14,
+    "imagem": "/img/produtos/hamburguer-simples.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-hamburguer-especial",
+    "categoria": "lanche",
+    "nome": "Hambúrguer Especial",
+    "descricao": "Hambúrguer, bacon, calabresa, queijo, vinagrete e batata palha.",
+    "preco": 22.9,
+    "imagem": "/img/produtos/hamburguer-especial.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-burger",
+    "categoria": "lanche",
+    "nome": "X Burger",
+    "descricao": "Hambúrguer, queijo, vinagrete e batata palha.",
+    "preco": 16,
+    "imagem": "/img/produtos/x-burger.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-salada-hamburguer",
+    "categoria": "lanche",
+    "nome": "X Salada com Hambúrguer",
+    "descricao": "Hambúrguer, queijo, salada e batata palha.",
+    "preco": 21,
+    "imagem": "/img/produtos/x-salada-hamburguer.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-egg-salada",
+    "categoria": "lanche",
+    "nome": "X Egg Salada",
+    "descricao": "Hambúrguer, ovo, queijo, salada e batata palha.",
+    "preco": 22,
+    "imagem": "/img/produtos/x-egg-salada.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-bacon",
+    "categoria": "lanche",
+    "nome": "X Bacon",
+    "descricao": "Hambúrguer, bacon, queijo, vinagrete e batata palha.",
+    "preco": 24,
+    "imagem": "/img/produtos/x-bacon.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-egg-salada-bacon",
+    "categoria": "lanche",
+    "nome": "X Egg Salada Bacon",
+    "descricao": "Hambúrguer, bacon, ovo, queijo, salada e batata palha.",
+    "preco": 24.9,
+    "imagem": "/img/produtos/x-egg-salada-bacon.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-salada-file-frango",
+    "categoria": "lanche",
+    "nome": "X Salada com Filé de Frango",
+    "descricao": "Filé de frango, queijo, salada e batata palha.",
+    "preco": 22.9,
+    "imagem": "/img/produtos/x-salada-file-frango.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-frango-especial",
+    "categoria": "lanche",
+    "nome": "X Frango Especial",
+    "descricao": "Filé de frango, bacon, calabresa, queijo, catupiry, vinagrete e batata palha.",
+    "preco": 24.9,
+    "imagem": "/img/produtos/x-frango-especial.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-guerreiro-1",
+    "categoria": "lanche",
+    "nome": "X Guerreiro 1",
+    "descricao": "1 salsicha e meia, 2 hambúrgueres, 2 ovos, salada, queijo e batata palha.",
+    "preco": 25.9,
+    "imagem": "/img/produtos/x-guerreiro-1.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-guerreiro-2",
+    "categoria": "lanche",
+    "nome": "X Guerreiro 2",
+    "descricao": "2 hambúrgueres, 2 ovos, bacon, calabresa, queijo, salada e batata palha.",
+    "preco": 27.9,
+    "imagem": "/img/produtos/x-guerreiro-2.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-guerreiro-3",
+    "categoria": "lanche",
+    "nome": "X Guerreiro 3",
+    "descricao": "2 filés de frango, 2 ovos, bacon, calabresa, queijo e batata palha.",
+    "preco": 29,
+    "imagem": "/img/produtos/x-guerreiro-3.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-x-tudo",
+    "categoria": "lanche",
+    "nome": "X Tudo",
+    "descricao": "Hambúrguer, filé de frango, ovo, salsicha, bacon, calabresa, catupiry, queijo, salada e batata palha.",
+    "preco": 30,
+    "imagem": "/img/produtos/x-tudo.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-omelete-especial",
+    "categoria": "lanche",
+    "nome": "Omelete Especial",
+    "descricao": "2 ovos, hambúrguer, calabresa, bacon, queijo, salada e batata palha.",
+    "preco": 24.9,
+    "imagem": "/img/produtos/omelete-especial.svg",
+    "pausado": false
+  },
+  {
+    "id": "lanche-vegetariano",
+    "categoria": "lanche",
+    "nome": "Vegetariano",
+    "descricao": "Dois ovos, queijo, vinagrete e batata palha.",
+    "preco": 15.9,
+    "imagem": "/img/produtos/vegetariano.svg",
+    "pausado": false
+  },
+  {
+    "id": "bebida-agua-500ml",
+    "categoria": "bebida",
+    "nome": "Água 500ml",
+    "descricao": "Água mineral sem gás 500ml.",
+    "preco": 3.5,
+    "imagem": "/img/produtos/agua.svg",
+    "pausado": false
+  },
+  {
+    "id": "bebida-agua-com-gas",
+    "categoria": "bebida",
+    "nome": "Água com Gás",
+    "descricao": "Água mineral com gás.",
+    "preco": 4,
+    "imagem": "/img/produtos/agua-gas.svg",
+    "pausado": false
+  },
+  {
+    "id": "bebida-refri-200ml",
+    "categoria": "bebida",
+    "nome": "Refrigerante 200ml",
+    "descricao": "Refrigerante lata/vidro 200ml.",
+    "preco": 4,
+    "imagem": "/img/produtos/refrigerante-200.svg",
+    "pausado": false
+  },
+  {
+    "id": "bebida-refri-350ml",
+    "categoria": "bebida",
+    "nome": "Refrigerante 350ml",
+    "descricao": "Refrigerante lata 350ml.",
+    "preco": 6,
+    "imagem": "/img/produtos/refrigerante-350.svg",
+    "pausado": false
+  },
+  {
+    "id": "bebida-refri-600ml",
+    "categoria": "bebida",
+    "nome": "Refrigerante 600ml",
+    "descricao": "Refrigerante garrafa 600ml.",
+    "preco": 10,
+    "imagem": "/img/produtos/refrigerante-600.svg",
+    "pausado": false
+  },
+  {
+    "id": "bebida-refri-1l",
+    "categoria": "bebida",
+    "nome": "Refrigerante 1L",
+    "descricao": "Refrigerante garrafa 1 litro.",
+    "preco": 12,
+    "imagem": "/img/produtos/refrigerante-1l.svg",
+    "pausado": false
+  },
+  {
+    "id": "bebida-suco-300ml",
+    "categoria": "bebida",
+    "nome": "Suco 300ml",
+    "descricao": "Suco natural 300ml.",
+    "preco": 5,
+    "imagem": "/img/produtos/suco.svg",
+    "pausado": false
+  }
+]

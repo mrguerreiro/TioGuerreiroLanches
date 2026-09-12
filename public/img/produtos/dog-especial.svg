@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a1a1f"/>
+      <stop offset="1" stop-color="#B5121B"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <g transform="translate(50,90)">
+    <path d="M0 40 Q100 -10 200 40 L200 70 Q100 110 0 70 Z" fill="#E8B87A"/>
+    <rect x="20" y="30" width="160" height="30" rx="15" fill="#C1272D"/>
+    <path d="M20 35 Q100 55 180 35" stroke="#FDC70C" stroke-width="4" fill="none"/>
+  </g>
+  <text x="200" y="245" text-anchor="middle" font-family="Verdana, Arial, sans-serif" font-size="20" font-weight="bold" fill="#FFFFFF">Dog Especial</text>
+  <text x="200" y="270" text-anchor="middle" font-family="Verdana, Arial, sans-serif" font-size="12" fill="#FFE0B2">Imagem meramente ilustrativa</text>
+</svg>

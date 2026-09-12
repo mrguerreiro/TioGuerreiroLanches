@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagamento (simulação) - Tio Guerreiro Lanches</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header class="topo">
+  <img class="logo" src="/img/logo.jpeg" alt="Logo Tio Guerreiro Lanches">
+  <div class="titulo"><h1>Pagamento online</h1></div>
+</header>
+<main>
+  <div class="modal mt-20">
+    <h2>Ambiente de simulação do PagSeguro</h2>
+    <p>O checkout real do PagSeguro ainda não foi configurado neste site (faltam as credenciais <code>PAGSEGURO_TOKEN</code> no arquivo <code>.env</code>).</p>
+    <p>Pedido: <strong id="pedido"></strong></p>
+    <p>Valor: <strong id="valor"></strong></p>
+    <p>Assim que as credenciais forem cadastradas, o cliente será redirecionado automaticamente para o checkout oficial do PagSeguro/PagBank.</p>
+    <a class="btn sem-decoracao" href="/index.html">Voltar ao cardápio</a>
+  </div>
+</main>
+<script>
+  const parametros = new URLSearchParams(window.location.search);
+  document.getElementById('pedido').textContent = parametros.get('pedido') || '-';
+  document.getElementById('valor').textContent = 'R$ ' + (parametros.get('valor') || '0,00');
+</script>
+</body>
+</html>

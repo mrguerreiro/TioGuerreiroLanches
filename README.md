@@ -74,11 +74,33 @@ Este repositório publica automaticamente a pasta `public/` no GitHub Pages a ca
 **Importante:** o GitHub Pages hospeda apenas arquivos estáticos. Ele **não executa o servidor Node.js**, então
 no endereço do GitHub Pages o cardápio, o carrinho, os pedidos e o painel administrativo **não funcionam** —
 o site mostra apenas um aviso explicando isso. O GitHub Pages é útil como vitrine/prévia visual, mas o site
-completo e funcional precisa rodar em um serviço que suporte Node.js, por exemplo:
+completo e funcional precisa rodar em um serviço que suporte Node.js — veja a seção abaixo.
 
-- [Render](https://render.com/) ou [Railway](https://railway.app/) (planos gratuitos disponíveis)
+## Publicar o site completo e funcional (Render)
+
+O jeito mais simples de colocar o site no ar **com todas as funções ativas** (cardápio, pedidos, painel admin)
+é usar o [Render](https://render.com/), que tem plano gratuito. O repositório já inclui o arquivo `render.yaml`
+com a configuração pronta.
+
+Passo a passo:
+
+1. Crie uma conta gratuita em [render.com](https://render.com/) (pode entrar com sua conta do GitHub).
+2. No painel do Render, clique em **New +** → **Blueprint**.
+3. Selecione o repositório `TioGuerreiroLanches` (autorize o Render a acessar sua conta do GitHub se pedido).
+4. O Render vai detectar o `render.yaml` automaticamente. Confirme a criação do serviço.
+5. Quando pedir os valores de `ADMIN_PASSWORD`, `PAGSEGURO_EMAIL` e `PAGSEGURO_TOKEN`, preencha (ou deixe em
+   branco para configurar depois em **Environment** nas configurações do serviço).
+6. Aguarde o build/deploy terminar. O Render vai gerar uma URL pública, algo como
+   `https://tio-guerreiro-lanches.onrender.com` — esse link já abre o site completo e funcional.
+
+**Atenção — armazenamento no plano gratuito:** o plano gratuito do Render usa disco temporário. Isso significa
+que o cardápio (itens adicionados/pausados/excluídos pelo painel) e os pedidos salvos em `server/data/*.json`
+são perdidos a cada novo deploy ou quando o serviço "dorme" por inatividade e reinicia. Para manter os dados
+permanentemente, é necessário um plano pago do Render com disco persistente, ou migrar o armazenamento para um
+banco de dados externo (ex.: PostgreSQL gratuito do próprio Render, ou similar).
+
+Alternativas ao Render, com o mesmo princípio (Node.js + variáveis de ambiente do `.env.example`):
+- [Railway](https://railway.app/)
 - [Fly.io](https://fly.io/)
 - Uma VPS própria (com Node.js, PM2 e um domínio configurado)
-
-Nesses serviços, configure as variáveis de ambiente do `.env.example` e rode `npm install && npm start`.
 

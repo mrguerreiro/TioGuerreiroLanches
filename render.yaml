@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: tio-guerreiro-lanches
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PAGSEGURO_EMAIL
+        sync: false
+      - key: PAGSEGURO_TOKEN
+        sync: false
+      - key: PAGSEGURO_SANDBOX
+        value: "true"

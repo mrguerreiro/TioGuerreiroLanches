@@ -1,0 +1,13 @@
+[
+  { "id": "hamburguer", "nome": "Hambúrguer", "preco": 4.00 },
+  { "id": "salsicha", "nome": "Salsicha", "preco": 4.00 },
+  { "id": "frango", "nome": "Frango", "preco": 4.00 },
+  { "id": "queijo", "nome": "Queijo", "preco": 4.00 },
+  { "id": "bacon", "nome": "Bacon", "preco": 5.00 },
+  { "id": "calabresa", "nome": "Calabresa", "preco": 5.00 },
+  { "id": "catupiry", "nome": "Catupiry", "preco": 5.00 },
+  { "id": "ovo", "nome": "Ovo", "preco": 4.00 },
+  { "id": "batata-palha", "nome": "Batata Palha", "preco": 4.00 },
+  { "id": "salada", "nome": "Salada", "preco": 4.00 },
+  { "id": "vinagrete", "nome": "Vinagrete", "preco": 4.00 }
+]

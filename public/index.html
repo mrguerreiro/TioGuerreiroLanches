@@ -42,11 +42,13 @@
   <section id="lista-lanches">
     <h2 class="categoria-titulo">Lanches</h2>
     <div class="grade-produtos" id="grade-lanches"></div>
+    <button type="button" class="btn-voltar-topo" data-voltar-topo>⬆ Voltar ao topo</button>
   </section>
 
   <section id="lista-bebidas">
     <h2 class="categoria-titulo">Bebidas</h2>
     <div class="grade-produtos" id="grade-bebidas"></div>
+    <button type="button" class="btn-voltar-topo" data-voltar-topo>⬆ Voltar ao topo</button>
   </section>
 
   <section id="lista-acrescimos">
@@ -60,6 +62,7 @@
       <li><span>Ovo / Batata Palha</span><span class="pontilhado"></span><span>R$ 4,00</span></li>
       <li><span>Salada / Vinagrete</span><span class="pontilhado"></span><span>R$ 4,00</span></li>
     </ul>
+    <button type="button" class="btn-voltar-topo" data-voltar-topo>⬆ Voltar ao topo</button>
   </section>
 </main>
 
@@ -73,6 +76,18 @@
 <div class="barra-carrinho oculta" id="barra-carrinho">
   <span id="resumo-carrinho">0 itens — R$ 0,00</span>
   <button class="btn" id="btn-ver-carrinho">Ver carrinho</button>
+</div>
+
+<!-- Modal de escolha de acréscimos -->
+<div class="modal-fundo oculta" id="modal-acrescimos">
+  <div class="modal">
+    <h2>Deseja algum acréscimo?</h2>
+    <p class="texto-ajuda" id="nome-item-acrescimo"></p>
+    <ul class="lista-selecao-acrescimos" id="lista-selecao-acrescimos"></ul>
+    <div class="total-final"><span>Total do item</span><span id="total-item-acrescimo">R$ 0,00</span></div>
+    <button type="button" class="btn largura-total" id="btn-confirmar-acrescimos">Adicionar ao carrinho</button>
+    <button type="button" class="btn secundario largura-total mt-8" id="btn-cancelar-acrescimos">Cancelar</button>
+  </div>
 </div>
 
 <!-- Modal do carrinho -->

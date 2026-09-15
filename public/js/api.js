@@ -17,6 +17,7 @@ const API = {
   getMenu: () => API._req('GET', '/api/menu'),
   getConfiguracoes: () => API._req('GET', '/api/configuracoes'),
   salvarConfiguracoes: (dados) => API._req('PUT', '/api/configuracoes', dados),
+  getAcrescimos: () => API._req('GET', '/api/acrescimos'),
 
   criarItem: (dados) => API._req('POST', '/api/menu', dados),
   atualizarItem: (id, dados) => API._req('PUT', `/api/menu/${id}`, dados),

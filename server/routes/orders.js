@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../utils/db');
 const { requireAdmin } = require('../middleware/auth');
 const { criarCheckoutPagSeguro } = require('../utils/pagseguro');
+const catalogoAcrescimos = require('../data/acrescimos.json');
 
 function validarCliente(tipoEntrega, cliente) {
   if (!cliente || !cliente.nome || !cliente.telefone) {
@@ -49,10 +50,25 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ erro: `Item indisponível no momento: ${produto.nome}` });
       }
       const quantidade = Math.max(1, parseInt(it.quantidade, 10) || 1);
+
+      // Os acréscimos e seus preços vêm sempre do catálogo do servidor, nunca do que o cliente enviar.
+      const acrescimosPedido = [];
+      if (produto.categoria === 'lanche' && Array.isArray(it.acrescimos)) {
+        for (const idAcrescimo of it.acrescimos) {
+          const acrescimo = catalogoAcrescimos.find((a) => a.id === idAcrescimo);
+          if (!acrescimo) {
+            return res.status(400).json({ erro: `Acréscimo inválido: ${idAcrescimo}` });
+          }
+          acrescimosPedido.push({ id: acrescimo.id, nome: acrescimo.nome, preco: acrescimo.preco });
+        }
+      }
+
+      const precoUnitario = produto.preco + acrescimosPedido.reduce((soma, a) => soma + a.preco, 0);
       itensPedido.push({
         id: produto.id,
         nome: produto.nome,
-        preco: produto.preco,
+        preco: precoUnitario,
+        acrescimos: acrescimosPedido,
         quantidade
       });
     }

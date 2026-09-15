@@ -1,6 +1,8 @@
 let menu = [];
 let configuracoes = {};
-let carrinho = {}; // { [id]: { item, quantidade } }
+let acrescimosCatalogo = [];
+let carrinho = {}; // { [chave]: { item, quantidade, acrescimos: [{id,nome,preco}] } }
+let itemPendenteAcrescimo = null;
 
 const formatarMoeda = (valor) => valor.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
 
@@ -37,21 +39,84 @@ function renderizarMenu() {
 function adicionarAoCarrinho(id) {
   const item = menu.find((m) => m.id === id);
   if (!item || item.pausado) return;
-  if (!carrinho[id]) carrinho[id] = { item, quantidade: 0 };
-  carrinho[id].quantidade += 1;
+
+  if (item.categoria === 'lanche' && acrescimosCatalogo.length > 0) {
+    abrirModalAcrescimos(item);
+    return;
+  }
+
+  incluirNoCarrinho(item, []);
+}
+
+function chaveCarrinho(item, acrescimos) {
+  const idsAcrescimos = acrescimos.map((a) => a.id).sort().join(',');
+  return `${item.id}::${idsAcrescimos}`;
+}
+
+function incluirNoCarrinho(item, acrescimos) {
+  const chave = chaveCarrinho(item, acrescimos);
+  if (!carrinho[chave]) carrinho[chave] = { item, quantidade: 0, acrescimos };
+  carrinho[chave].quantidade += 1;
   atualizarBarraCarrinho();
 }
 
-function alterarQuantidade(id, delta) {
-  if (!carrinho[id]) return;
-  carrinho[id].quantidade += delta;
-  if (carrinho[id].quantidade <= 0) delete carrinho[id];
+function abrirModalAcrescimos(item) {
+  itemPendenteAcrescimo = item;
+  document.getElementById('nome-item-acrescimo').textContent = item.nome;
+
+  const lista = document.getElementById('lista-selecao-acrescimos');
+  lista.innerHTML = acrescimosCatalogo.map((a) => `
+    <li>
+      <label>
+        <input type="checkbox" value="${a.id}" data-preco="${a.preco}">
+        <span class="nome-acrescimo">${a.nome}</span>
+        <span class="preco-acrescimo">+ ${formatarMoeda(a.preco)}</span>
+      </label>
+    </li>`).join('');
+
+  lista.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+    cb.addEventListener('change', atualizarTotalModalAcrescimos);
+  });
+
+  atualizarTotalModalAcrescimos();
+  abrirModal('modal-acrescimos');
+}
+
+function atualizarTotalModalAcrescimos() {
+  const marcados = document.querySelectorAll('#lista-selecao-acrescimos input:checked');
+  const somaAcrescimos = Array.from(marcados).reduce((soma, cb) => soma + Number(cb.dataset.preco), 0);
+  const total = (itemPendenteAcrescimo ? itemPendenteAcrescimo.preco : 0) + somaAcrescimos;
+  document.getElementById('total-item-acrescimo').textContent = formatarMoeda(total);
+}
+
+function confirmarAcrescimos() {
+  if (!itemPendenteAcrescimo) return;
+  const marcados = document.querySelectorAll('#lista-selecao-acrescimos input:checked');
+  const acrescimosEscolhidos = Array.from(marcados).map((cb) => {
+    const catalogo = acrescimosCatalogo.find((a) => a.id === cb.value);
+    return { id: catalogo.id, nome: catalogo.nome, preco: catalogo.preco };
+  });
+
+  incluirNoCarrinho(itemPendenteAcrescimo, acrescimosEscolhidos);
+  itemPendenteAcrescimo = null;
+  fecharModal('modal-acrescimos');
+}
+
+function alterarQuantidade(chave, delta) {
+  if (!carrinho[chave]) return;
+  carrinho[chave].quantidade += delta;
+  if (carrinho[chave].quantidade <= 0) delete carrinho[chave];
   atualizarBarraCarrinho();
   renderizarModalCarrinho();
 }
 
+function precoUnitario(entrada) {
+  const somaAcrescimos = entrada.acrescimos.reduce((soma, a) => soma + a.preco, 0);
+  return entrada.item.preco + somaAcrescimos;
+}
+
 function totalCarrinho() {
-  return Object.values(carrinho).reduce((soma, { item, quantidade }) => soma + item.preco * quantidade, 0);
+  return Object.values(carrinho).reduce((soma, entrada) => soma + precoUnitario(entrada) * entrada.quantidade, 0);
 }
 
 function quantidadeTotalCarrinho() {
@@ -74,18 +139,22 @@ function renderizarModalCarrinho() {
     container.innerHTML = '<p>Seu carrinho está vazio.</p>';
   }
 
-  for (const [id, { item, quantidade }] of entradas) {
+  for (const [chave, entrada] of entradas) {
+    const { item, quantidade, acrescimos } = entrada;
+    const textoAcrescimos = acrescimos.length > 0
+      ? `<br><small>+ ${acrescimos.map((a) => a.nome).join(', ')}</small>`
+      : '';
     const linha = document.createElement('div');
     linha.className = 'linha-item-carrinho';
     linha.innerHTML = `
-      <span class="nome">${item.nome}<br><small>${formatarMoeda(item.preco)}</small></span>
+      <span class="nome">${item.nome}<br><small>${formatarMoeda(precoUnitario(entrada))}</small>${textoAcrescimos}</span>
       <div class="qtd-controle">
         <button data-acao="menos">−</button>
         <span>${quantidade}</span>
         <button data-acao="mais">+</button>
       </div>`;
-    linha.querySelector('[data-acao="menos"]').addEventListener('click', () => alterarQuantidade(id, -1));
-    linha.querySelector('[data-acao="mais"]').addEventListener('click', () => alterarQuantidade(id, 1));
+    linha.querySelector('[data-acao="menos"]').addEventListener('click', () => alterarQuantidade(chave, -1));
+    linha.querySelector('[data-acao="mais"]').addEventListener('click', () => alterarQuantidade(chave, 1));
     container.appendChild(linha);
   }
 
@@ -126,7 +195,11 @@ async function enviarPedido(evento) {
     };
   }
 
-  const itens = Object.entries(carrinho).map(([id, { quantidade }]) => ({ id, quantidade }));
+  const itens = Object.values(carrinho).map(({ item, quantidade, acrescimos }) => ({
+    id: item.id,
+    quantidade,
+    acrescimos: acrescimos.map((a) => a.id)
+  }));
 
   try {
     const pedido = await API.criarPedido({ itens, tipoEntrega, cliente, formaPagamento });
@@ -170,17 +243,27 @@ function configurarEventos() {
   document.querySelectorAll('input[name="tipoEntrega"]').forEach((el) => el.addEventListener('change', alternarCamposEndereco));
   document.getElementById('form-checkout').addEventListener('submit', enviarPedido);
 
+  document.getElementById('btn-confirmar-acrescimos').addEventListener('click', confirmarAcrescimos);
+  document.getElementById('btn-cancelar-acrescimos').addEventListener('click', () => {
+    itemPendenteAcrescimo = null;
+    fecharModal('modal-acrescimos');
+  });
+
   document.getElementById('btn-fechar-confirmacao').addEventListener('click', () => {
     fecharModal('modal-confirmacao');
     document.getElementById('form-checkout').reset();
     alternarCamposEndereco();
+  });
+
+  document.querySelectorAll('[data-voltar-topo]').forEach((btn) => {
+    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   });
 }
 
 async function iniciar() {
   configurarEventos();
   try {
-    [menu, configuracoes] = await Promise.all([API.getMenu(), API.getConfiguracoes()]);
+    [menu, configuracoes, acrescimosCatalogo] = await Promise.all([API.getMenu(), API.getConfiguracoes(), API.getAcrescimos()]);
     renderizarMenu();
     if (configuracoes.horarioFuncionamento) {
       document.getElementById('horario-funcionamento').textContent = configuracoes.horarioFuncionamento;

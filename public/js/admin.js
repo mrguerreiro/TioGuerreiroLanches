@@ -59,6 +59,25 @@ async function carregarPedidos() {
   });
 }
 
+async function carregarClientes() {
+  const clientes = await API.listarClientes();
+  const tbody = document.getElementById('tabela-clientes');
+  tbody.innerHTML = '';
+
+  for (const cliente of clientes) {
+    const endereco = cliente.endereco
+      ? `${cliente.endereco.rua}, ${cliente.endereco.numero} - ${cliente.endereco.bairro}, ${cliente.endereco.cidade}`
+      : '—';
+    const linha = document.createElement('tr');
+    linha.innerHTML = `
+      <td>${cliente.nome}</td>
+      <td>${cliente.telefone}</td>
+      <td>${endereco}</td>
+      <td>${new Date(cliente.atualizadoEm).toLocaleString('pt-br')}</td>`;
+    tbody.appendChild(linha);
+  }
+}
+
 async function carregarCardapio() {
   const menu = await API.getMenu();
   const containers = { lanche: document.getElementById('lista-admin-lanches'), bebida: document.getElementById('lista-admin-bebidas') };
@@ -156,6 +175,7 @@ function configurarFormularios() {
   });
 
   document.getElementById('btn-atualizar-pedidos').addEventListener('click', carregarPedidos);
+  document.getElementById('btn-atualizar-clientes').addEventListener('click', carregarClientes);
 
   document.getElementById('form-novo-item').addEventListener('submit', async (evento) => {
     evento.preventDefault();
@@ -190,7 +210,7 @@ function configurarFormularios() {
 
 async function iniciarPainel() {
   mostrarPainel(true);
-  await Promise.all([carregarPedidos(), carregarCardapio(), carregarConfiguracoes()]);
+  await Promise.all([carregarPedidos(), carregarCardapio(), carregarClientes(), carregarConfiguracoes()]);
 }
 
 async function iniciar() {

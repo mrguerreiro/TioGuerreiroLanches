@@ -47,6 +47,8 @@ demonstração. Para habilitar cobranças reais:
 
 No painel é possível:
 - Ver e atualizar o status dos pedidos recebidos.
+- Consultar a aba **Clientes**: nome, telefone e endereço (quando informado) de cada cliente que já fez pedido,
+  salvos automaticamente tanto na retirada quanto na entrega.
 - Adicionar novos itens ao cardápio (lanches ou bebidas) — se nenhuma imagem for informada, uma imagem ilustrativa
   é gerada automaticamente nas cores da marca.
 - Pausar/reativar um item (fica visível mas indisponível para pedido).

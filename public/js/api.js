@@ -28,6 +28,8 @@ const API = {
   listarPedidos: () => API._req('GET', '/api/pedidos'),
   atualizarStatusPedido: (id, status) => API._req('PUT', `/api/pedidos/${id}/status`, { status }),
 
+  listarClientes: () => API._req('GET', '/api/clientes'),
+
   login: (usuario, senha) => API._req('POST', '/api/auth/login', { usuario, senha }),
   logout: () => API._req('POST', '/api/auth/logout'),
   statusAuth: () => API._req('GET', '/api/auth/status')

@@ -105,6 +105,13 @@ router.post('/', async (req, res) => {
     orders.push(pedido);
     await db.saveOrders(orders);
 
+    // Guarda/atualiza o cadastro do cliente (nome, telefone e endereço quando houver) no banco de dados.
+    await db.upsertCliente({
+      telefone: cliente.telefone.replace(/\D/g, ''),
+      nome: pedido.cliente.nome,
+      endereco: pedido.cliente.endereco
+    });
+
     res.status(201).json(pedido);
   } catch (err) {
     console.error(err);

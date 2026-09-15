@@ -37,6 +37,16 @@ async function init() {
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS clientes (
+      telefone TEXT PRIMARY KEY,
+      nome TEXT NOT NULL,
+      endereco JSONB,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+
   const { rows: menuRows } = await pool.query('SELECT COUNT(*)::int AS total FROM itens_cardapio');
   if (menuRows[0].total === 0) {
     let ordem = 0;
@@ -133,4 +143,26 @@ async function saveSettings(settings) {
   );
 }
 
-module.exports = { init, getMenu, saveMenu, getOrders, saveOrders, getSettings, saveSettings };
+// Grava ou atualiza os dados do cliente (nome/endereço) sempre que ele faz um pedido, seja retirada ou entrega.
+async function upsertCliente(cliente) {
+  await pool.query(
+    `INSERT INTO clientes (telefone, nome, endereco, atualizado_em)
+     VALUES ($1, $2, $3, now())
+     ON CONFLICT (telefone) DO UPDATE
+     SET nome = $2, endereco = COALESCE($3, clientes.endereco), atualizado_em = now()`,
+    [cliente.telefone, cliente.nome, cliente.endereco || null]
+  );
+}
+
+async function getClientes() {
+  const { rows } = await pool.query('SELECT telefone, nome, endereco, criado_em, atualizado_em FROM clientes ORDER BY atualizado_em DESC');
+  return rows.map((r) => ({
+    telefone: r.telefone,
+    nome: r.nome,
+    endereco: r.endereco,
+    criadoEm: r.criado_em,
+    atualizadoEm: r.atualizado_em
+  }));
+}
+
+module.exports = { init, getMenu, saveMenu, getOrders, saveOrders, getSettings, saveSettings, upsertCliente, getClientes };

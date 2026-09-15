@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tio-guerreiro-v3';
+const CACHE_NAME = 'tio-guerreiro-v4';
 const ARQUIVOS_ESSENCIAIS = [
   './',
   'index.html',
@@ -35,14 +35,31 @@ self.addEventListener('fetch', (evento) => {
     return;
   }
 
+  // HTML/CSS/JS: tenta a rede primeiro (para nunca servir versão desatualizada) e usa o cache só como reserva offline.
+  const ehImagem = evento.request.destination === 'image';
+  if (ehImagem) {
+    evento.respondWith(
+      caches.match(evento.request).then((respostaCache) => {
+        return respostaCache || fetch(evento.request).then((respostaRede) => {
+          return caches.open(CACHE_NAME).then((cache) => {
+            cache.put(evento.request, respostaRede.clone());
+            return respostaRede;
+          });
+        });
+      })
+    );
+    return;
+  }
+
   evento.respondWith(
-    caches.match(evento.request).then((respostaCache) => {
-      return respostaCache || fetch(evento.request).then((respostaRede) => {
+    fetch(evento.request)
+      .then((respostaRede) => {
         return caches.open(CACHE_NAME).then((cache) => {
           cache.put(evento.request, respostaRede.clone());
           return respostaRede;
         });
-      }).catch(() => respostaCache);
-    })
+      })
+      .catch(() => caches.match(evento.request))
   );
 });
+

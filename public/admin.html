@@ -61,6 +61,7 @@
   <div class="aba-botoes">
     <button data-aba="aba-pedidos" class="ativa">Pedidos</button>
     <button data-aba="aba-cardapio">Cardápio</button>
+    <button data-aba="aba-clientes">Clientes</button>
     <button data-aba="aba-config">Configurações</button>
     <button id="btn-logout" type="button" class="btn-sair">Sair</button>
   </div>
@@ -99,6 +100,16 @@
     <div id="lista-admin-lanches"></div>
     <h3>Bebidas</h3>
     <div id="lista-admin-bebidas"></div>
+  </section>
+
+  <section id="aba-clientes" class="aba">
+    <h2>Clientes</h2>
+    <p class="texto-ajuda">Dados salvos automaticamente sempre que um cliente faz um pedido (retirada ou entrega).</p>
+    <button class="btn secundario" id="btn-atualizar-clientes">Atualizar</button>
+    <table>
+      <thead><tr><th>Nome</th><th>Telefone</th><th>Endereço</th><th>Último pedido</th></tr></thead>
+      <tbody id="tabela-clientes"></tbody>
+    </table>
   </section>
 
   <section id="aba-config" class="aba">

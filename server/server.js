@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 
+const db = require('./utils/db');
 const authRoutes = require('./routes/auth');
 const menuRoutes = require('./routes/menu');
 const ordersRoutes = require('./routes/orders');
@@ -32,6 +33,14 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Tio Guerreiro Lanches rodando em http://localhost:${PORT}`);
-});
+db.init()
+  .then(() => {
+    app.listen(PORT, () => {
+      const modo = process.env.DATABASE_URL ? 'PostgreSQL' : 'arquivos JSON locais';
+      console.log(`Tio Guerreiro Lanches rodando em http://localhost:${PORT} (armazenamento: ${modo})`);
+    });
+  })
+  .catch((err) => {
+    console.error('Falha ao inicializar o banco de dados:', err);
+    process.exit(1);
+  });

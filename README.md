@@ -22,10 +22,12 @@ Login padrão do painel (definido em `.env`):
 
 ## Estrutura
 
-- `server/` — API em Node.js/Express. Dados salvos em arquivos JSON (`server/data`).
+- `server/` — API em Node.js/Express.
+- `server/utils/db.js` — escolhe automaticamente o armazenamento: PostgreSQL (`dbPostgres.js`) se `DATABASE_URL`
+  estiver definida, ou arquivos JSON locais (`dbArquivo.js`, em `server/data`) caso contrário.
 - `public/` — site do cliente (`index.html`) e painel administrativo (`admin.html`).
-- `public/img/produtos/` — imagens ilustrativas geradas para cada item do cardápio (não são fotos reais).
-- `scripts/generate-product-images.js` — regera as imagens ilustrativas iniciais a partir do `server/data/menu.json`.
+- `public/img/produtos/` — imagens ilustrativas usadas no cardápio inicial do modo local (não são fotos reais).
+- `scripts/generate-product-images.js` — regera essas imagens ilustrativas a partir do `server/data/menu.json`.
 
 ## Pagamento pelo PagSeguro
 
@@ -93,14 +95,16 @@ Passo a passo:
 6. Aguarde o build/deploy terminar. O Render vai gerar uma URL pública, algo como
    `https://tio-guerreiro-lanches.onrender.com` — esse link já abre o site completo e funcional.
 
-**Atenção — armazenamento no plano gratuito:** o plano gratuito do Render usa disco temporário. Isso significa
-que o cardápio (itens adicionados/pausados/excluídos pelo painel) e os pedidos salvos em `server/data/*.json`
-são perdidos a cada novo deploy ou quando o serviço "dorme" por inatividade e reinicia. Para manter os dados
-permanentemente, é necessário um plano pago do Render com disco persistente, ou migrar o armazenamento para um
-banco de dados externo (ex.: PostgreSQL gratuito do próprio Render, ou similar).
+**Armazenamento persistente com PostgreSQL:** o `render.yaml` já provisiona automaticamente um banco de dados
+PostgreSQL gratuito do próprio Render (`tio-guerreiro-db`) e conecta o site a ele pela variável `DATABASE_URL`.
+Assim, o cardápio (itens adicionados/pausados/excluídos/fotos trocadas pelo painel) e os pedidos ficam salvos
+permanentemente no banco, e não se perdem quando o serviço reinicia ou é atualizado.
 
-Alternativas ao Render, com o mesmo princípio (Node.js + variáveis de ambiente do `.env.example`):
+Se rodar o site localmente **sem** configurar `DATABASE_URL` no `.env`, ele volta a usar os arquivos JSON em
+`server/data/` (só para facilitar o desenvolvimento) — nesse modo local sem banco, os dados não são persistentes.
+
+Alternativas ao Render, com o mesmo princípio (Node.js + PostgreSQL + variáveis de ambiente do `.env.example`):
 - [Railway](https://railway.app/)
 - [Fly.io](https://fly.io/)
-- Uma VPS própria (com Node.js, PM2 e um domínio configurado)
+- Uma VPS própria (com Node.js, PM2, PostgreSQL e um domínio configurado)
 

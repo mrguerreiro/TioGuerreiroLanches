@@ -74,4 +74,9 @@ function buildProductSvg(nome, categoria) {
 </svg>`;
 }
 
-module.exports = { buildProductSvg };
+function buildProductSvgDataUri(nome, categoria) {
+  const svg = buildProductSvg(nome, categoria);
+  return `data:image/svg+xml;base64,${Buffer.from(svg, 'utf-8').toString('base64')}`;
+}
+
+module.exports = { buildProductSvg, buildProductSvgDataUri };

@@ -36,8 +36,8 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ erro: erroCliente });
     }
 
-    const menu = db.getMenu();
-    const settings = db.getSettings();
+    const menu = await db.getMenu();
+    const settings = await db.getSettings();
     const itensPedido = [];
 
     for (const it of itens) {
@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
     const taxaEntrega = tipoEntrega === 'entrega' ? Number(settings.taxaEntrega || 0) : 0;
     const total = subtotal + taxaEntrega;
 
-    const orders = db.getOrders();
+    const orders = await db.getOrders();
     const pedido = {
       id: `PED-${Date.now()}`,
       criadoEm: new Date().toISOString(),
@@ -87,7 +87,7 @@ router.post('/', async (req, res) => {
     }
 
     orders.push(pedido);
-    db.saveOrders(orders);
+    await db.saveOrders(orders);
 
     res.status(201).json(pedido);
   } catch (err) {
@@ -96,25 +96,33 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', requireAdmin, (req, res) => {
-  const orders = db.getOrders().slice().reverse();
-  res.json(orders);
+router.get('/', requireAdmin, async (req, res, next) => {
+  try {
+    const orders = await db.getOrders();
+    res.json(orders.slice().reverse());
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.put('/:id/status', requireAdmin, (req, res) => {
-  const { status } = req.body || {};
-  const permitidos = ['recebido', 'preparando', 'saiu_para_entrega', 'pronto_retirada', 'concluido', 'cancelado'];
-  if (!permitidos.includes(status)) {
-    return res.status(400).json({ erro: 'Status inválido.' });
+router.put('/:id/status', requireAdmin, async (req, res, next) => {
+  try {
+    const { status } = req.body || {};
+    const permitidos = ['recebido', 'preparando', 'saiu_para_entrega', 'pronto_retirada', 'concluido', 'cancelado'];
+    if (!permitidos.includes(status)) {
+      return res.status(400).json({ erro: 'Status inválido.' });
+    }
+    const orders = await db.getOrders();
+    const idx = orders.findIndex((o) => o.id === req.params.id);
+    if (idx === -1) {
+      return res.status(404).json({ erro: 'Pedido não encontrado.' });
+    }
+    orders[idx].status = status;
+    await db.saveOrders(orders);
+    res.json(orders[idx]);
+  } catch (err) {
+    next(err);
   }
-  const orders = db.getOrders();
-  const idx = orders.findIndex((o) => o.id === req.params.id);
-  if (idx === -1) {
-    return res.status(404).json({ erro: 'Pedido não encontrado.' });
-  }
-  orders[idx].status = status;
-  db.saveOrders(orders);
-  res.json(orders[idx]);
 });
 
 module.exports = router;

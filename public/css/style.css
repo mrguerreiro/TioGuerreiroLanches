@@ -38,11 +38,12 @@ header.topo {
 }
 
 header.topo img.logo {
-  width: 56px;
-  height: 56px;
+  width: 112px;
+  height: 112px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--amarelo);
+  border: 3px solid var(--amarelo);
+  flex-shrink: 0;
 }
 
 header.topo .titulo h1 {

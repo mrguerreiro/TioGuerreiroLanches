@@ -66,6 +66,72 @@ header.topo .titulo p {
   padding: 7px 10px;
 }
 
+.barra-categorias {
+  position: sticky;
+  top: 0;
+  z-index: 19;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  background: var(--branco);
+  padding: 10px 12px;
+  box-shadow: var(--sombra);
+}
+
+.barra-categorias .btn-categoria {
+  background: var(--vermelho);
+  color: var(--branco);
+  text-decoration: none;
+  font-weight: bold;
+  padding: 9px 20px;
+  border-radius: 24px;
+  border: 2px solid var(--vermelho);
+  transition: background 0.15s, color 0.15s;
+}
+
+.barra-categorias .btn-categoria:hover,
+.barra-categorias .btn-categoria:focus-visible {
+  background: var(--branco);
+  color: var(--vermelho);
+}
+
+.lista-precos-acrescimos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--branco);
+  border-radius: var(--radius);
+  box-shadow: var(--sombra);
+  overflow: hidden;
+}
+
+.lista-precos-acrescimos li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  font-weight: bold;
+  color: var(--preto);
+}
+
+.lista-precos-acrescimos li:last-child {
+  border-bottom: none;
+}
+
+.lista-precos-acrescimos .pontilhado {
+  flex: 1;
+  border-bottom: 2px dotted #ccc;
+  height: 0;
+  align-self: center;
+}
+
+.lista-precos-acrescimos li span:last-child {
+  color: var(--vermelho);
+  white-space: nowrap;
+}
+
 main {
   max-width: 960px;
   margin: 0 auto;

@@ -54,6 +54,7 @@ No painel é possível:
   salvos automaticamente tanto na retirada quanto na entrega.
 - Adicionar novos itens ao cardápio (lanches ou bebidas) — se nenhuma imagem for informada, uma imagem ilustrativa
   é gerada automaticamente nas cores da marca.
+- Editar um item (categoria, nome, preço e descrição) pelo botão **Editar**; a foto é trocada em "Trocar foto".
 - Pausar/reativar um item (fica visível mas indisponível para pedido).
 - Cadastrar, editar (nome e preço), pausar/reativar e excluir **acréscimos** (eles aparecem só na janela que abre ao escolher um
   lanche; um acréscimo pausado aparece como indisponível e não pode ser escolhido).

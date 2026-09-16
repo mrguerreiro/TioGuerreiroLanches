@@ -116,9 +116,16 @@ async function carregarCardapio() {
   for (const item of menu) {
     const container = containers[item.categoria];
     if (!container) continue;
+    container.appendChild(montarItemCardapio(item));
+  }
+}
 
-    const div = document.createElement('div');
-    div.className = 'form-item';
+// Cada produto tem dois modos: visualização (Editar/Pausar/Excluir e trocar foto) e edição (Salvar/Cancelar).
+function montarItemCardapio(item) {
+  const div = document.createElement('div');
+  div.className = 'form-item';
+
+  function mostrarVisualizacao() {
     div.innerHTML = `
       <div class="linha-item-admin">
         <img src="${escaparHtml(item.imagem)}" alt="" class="foto-item-admin">
@@ -133,12 +140,15 @@ async function carregarCardapio() {
           <span class="erro-foto-item"></span>
         </div>
         <div class="acoes-item">
-          <button class="btn-pausar">${item.pausado ? 'Reativar' : 'Pausar'}</button>
-          <button class="btn-excluir">Excluir</button>
+          <button type="button" class="btn-editar">Editar</button>
+          <button type="button" class="btn-pausar">${item.pausado ? 'Reativar' : 'Pausar'}</button>
+          <button type="button" class="btn-excluir">Excluir</button>
         </div>
       </div>`;
 
     const erroSpan = div.querySelector('.erro-foto-item');
+
+    div.querySelector('.btn-editar').addEventListener('click', mostrarEdicao);
 
     div.querySelector('.btn-pausar').addEventListener('click', async () => {
       erroSpan.textContent = '';
@@ -171,9 +181,69 @@ async function carregarCardapio() {
         erroSpan.textContent = err.message;
       }
     });
-
-    container.appendChild(div);
   }
+
+  function mostrarEdicao() {
+    div.innerHTML = `
+      <form class="form-editar-item">
+        <div class="linha-item-admin">
+          <img src="${escaparHtml(item.imagem)}" alt="" class="foto-item-admin">
+          <div class="info-item-admin">
+            <div class="campos">
+              <label>Categoria
+                <select name="categoria" required>
+                  <option value="lanche" ${item.categoria === 'lanche' ? 'selected' : ''}>Lanche</option>
+                  <option value="bebida" ${item.categoria === 'bebida' ? 'selected' : ''}>Bebida</option>
+                </select>
+              </label>
+              <label>Nome
+                <input name="nome" value="${escaparHtml(item.nome)}" required>
+              </label>
+              <label>Preço (R$)
+                <input name="preco" type="number" step="0.01" min="0" value="${Number(item.preco)}" required>
+              </label>
+            </div>
+            <label>Descrição
+              <textarea name="descricao" rows="2">${escaparHtml(item.descricao)}</textarea>
+            </label>
+            <span class="erro-foto-item"></span>
+          </div>
+        </div>
+        <div class="acoes-item mt-8">
+          <button type="submit" class="btn-salvar">Salvar</button>
+          <button type="button" class="btn-cancelar">Cancelar</button>
+        </div>
+      </form>`;
+
+    const form = div.querySelector('form');
+    const erroSpan = div.querySelector('.erro-foto-item');
+
+    div.querySelector('.btn-cancelar').addEventListener('click', mostrarVisualizacao);
+
+    form.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      erroSpan.textContent = '';
+      const botaoSalvar = form.querySelector('.btn-salvar');
+      botaoSalvar.disabled = true;
+      try {
+        await API.atualizarItem(item.id, {
+          categoria: form.categoria.value,
+          nome: form.nome.value,
+          preco: form.preco.value,
+          descricao: form.descricao.value
+        });
+        await carregarCardapio();
+      } catch (err) {
+        botaoSalvar.disabled = false;
+        erroSpan.textContent = err.message;
+      }
+    });
+
+    form.nome.focus();
+  }
+
+  mostrarVisualizacao();
+  return div;
 }
 
 async function carregarAcrescimos() {

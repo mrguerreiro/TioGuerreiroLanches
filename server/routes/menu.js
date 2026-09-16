@@ -58,14 +58,24 @@ router.put('/:id', requireAdmin, async (req, res, next) => {
     const { nome, descricao, preco, imagem, categoria, pausado } = req.body || {};
     const campos = {};
 
-    if (nome !== undefined) campos.nome = String(nome).trim();
+    if (nome !== undefined) {
+      if (!String(nome).trim()) {
+        return res.status(400).json({ erro: 'O nome do item é obrigatório.' });
+      }
+      campos.nome = String(nome).trim();
+    }
     if (descricao !== undefined) campos.descricao = String(descricao).trim();
-    if (categoria !== undefined && ['lanche', 'bebida'].includes(categoria)) campos.categoria = categoria;
+    if (categoria !== undefined) {
+      if (!['lanche', 'bebida'].includes(categoria)) {
+        return res.status(400).json({ erro: 'Categoria inválida.' });
+      }
+      campos.categoria = categoria;
+    }
     if (imagem !== undefined) campos.imagem = imagem;
     if (pausado !== undefined) campos.pausado = !!pausado;
     if (preco !== undefined) {
       const precoNum = Number(preco);
-      if (Number.isNaN(precoNum) || precoNum < 0) {
+      if (preco === null || String(preco).trim() === '' || Number.isNaN(precoNum) || precoNum < 0) {
         return res.status(400).json({ erro: 'Preço inválido.' });
       }
       campos.preco = precoNum;

@@ -62,6 +62,23 @@ No painel é possível:
 - Alterar taxa de entrega, horário de funcionamento, WhatsApp e formas de entrega/pagamento aceitas. As opções
   desativadas somem do checkout e também são recusadas pelo servidor.
 
+## Avisos de andamento do pedido (notificações no celular)
+
+A cada mudança de status do pedido, o cliente recebe uma notificação no celular. A primeira é sempre
+**Pedido recebido**, enviada assim que o pedido é feito; depois vêm "sendo preparado", "saiu para entrega" ou
+"pronto para retirada", "concluído" e "cancelado", conforme o status é alterado na aba Pedidos do painel.
+
+- No checkout, a opção "🔔 Quero receber no celular os avisos" vem marcada. Ao confirmar o pedido, o navegador
+  pede permissão para enviar notificações. Se o cliente recusar, o pedido é feito normalmente, só sem avisos.
+- Tocar na notificação abre a página **Acompanhar pedido** (`acompanhar.html`), que mostra o andamento e se
+  atualiza sozinha. O link também aparece na confirmação do pedido e no rodapé do site ("Acompanhar meu último pedido").
+- Na aba Pedidos do painel, o ícone 🔔 indica que aquele cliente está recebendo os avisos.
+- **iPhone/iPad:** só funciona com o site instalado na Tela de Início (iOS 16.4 ou mais recente). Fora do app, o
+  checkout mostra essa orientação ao cliente.
+- As notificações usam Web Push (gratuito, sem conta em serviço externo). As chaves são geradas automaticamente
+  na primeira execução e guardadas no banco. Opcionalmente, defina `VAPID_SUBJECT` (e-mail ou site de contato da
+  loja, ex.: `mailto:contato@sualoja.com.br`) nas variáveis de ambiente do Render.
+
 ## Instalar como aplicativo (PWA)
 
 O site pode ser instalado na tela inicial do celular, funcionando como um app:

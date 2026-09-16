@@ -53,6 +53,7 @@
 
 <footer class="rodape-site">
   <p>Tio Guerreiro Lanches — Pedidos apenas pelo site.</p>
+  <p id="link-ultimo-pedido" hidden><a href="#">📦 Acompanhar meu último pedido</a></p>
   <p><a href="admin.html">Painel administrativo</a></p>
 </footer>
 
@@ -121,6 +122,11 @@
         <label id="opcao-pagamento-local"><input type="radio" name="formaPagamento" value="entrega_local" checked><span>💵 Na entrega/retirada</span></label>
         <label id="opcao-pagamento-online"><input type="radio" name="formaPagamento" value="online"><span>💳 Pagar agora (PagSeguro)</span></label>
       </div>
+
+      <div id="bloco-avisos" class="bloco-avisos" hidden>
+        <label><input type="checkbox" id="campo-avisos" class="checkbox-inline" checked> 🔔 Quero receber no celular os avisos de andamento do pedido</label>
+      </div>
+      <p class="texto-ajuda" id="dica-avisos-iphone" hidden>📲 No iPhone, para receber avisos do pedido, adicione o site à Tela de Início e faça o pedido pelo app.</p>
 
       <div class="linha-resumo"><span>Subtotal</span><span id="subtotal-checkout">R$ 0,00</span></div>
       <div class="linha-resumo" id="linha-taxa-entrega" hidden><span>Taxa de entrega</span><span id="taxa-checkout">R$ 0,00</span></div>

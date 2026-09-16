@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Acompanhar pedido - Tio Guerreiro Lanches</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#B5121B">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topo">
+  <img class="logo" src="img/logo.jpeg" alt="Logo Tio Guerreiro Lanches">
+  <div class="titulo">
+    <h1>Acompanhar pedido</h1>
+    <p>Tio Guerreiro Lanches</p>
+  </div>
+</header>
+
+<main>
+  <div class="modal mt-20">
+    <div id="carregando">Carregando pedido...</div>
+    <div id="erro-acompanhamento" hidden></div>
+
+    <div id="dados-pedido" hidden>
+      <h2 id="titulo-pedido"></h2>
+      <p class="texto-ajuda" id="info-pedido"></p>
+      <ol class="linha-tempo" id="linha-tempo"></ol>
+      <p id="itens-pedido"></p>
+      <div class="total-final"><span>Total</span><span id="total-pedido"></span></div>
+      <p class="texto-ajuda">Esta página se atualiza sozinha a cada 30 segundos.</p>
+    </div>
+
+    <a class="btn sem-decoracao mt-10" href="index.html">Voltar ao cardápio</a>
+  </div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/acompanhar.js"></script>
+</body>
+</html>

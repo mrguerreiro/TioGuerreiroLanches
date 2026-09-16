@@ -67,7 +67,7 @@ async function carregarPedidos() {
           ${Object.entries(STATUS_LABEL).map(([valor, rotulo]) => `<option value="${valor}" ${pedido.status === valor ? 'selected' : ''}>${rotulo}</option>`).join('')}
         </select>
       </td>
-      <td></td>`;
+      <td>${pedido.avisosAtivos ? '<span title="O cliente recebe avisos no celular a cada mudança de status">🔔</span>' : ''}</td>`;
 
     const select = linha.querySelector('select');
     select.dataset.statusAtual = pedido.status;

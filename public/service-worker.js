@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tio-guerreiro-v7';
+const CACHE_NAME = 'tio-guerreiro-v8';
 const ARQUIVOS_ESSENCIAIS = [
   './',
   'index.html',
@@ -63,3 +63,36 @@ self.addEventListener('fetch', (evento) => {
   );
 });
 
+
+// Notificações de andamento do pedido enviadas pelo servidor.
+self.addEventListener('push', (evento) => {
+  let dados = {};
+  try {
+    dados = evento.data ? evento.data.json() : {};
+  } catch (err) {
+    dados = { texto: evento.data ? evento.data.text() : '' };
+  }
+
+  evento.waitUntil(
+    self.registration.showNotification(dados.titulo || 'Tio Guerreiro Lanches', {
+      body: dados.texto || '',
+      icon: 'icons/icon-192.png',
+      badge: 'icons/favicon-32.png',
+      tag: dados.tag,
+      renotify: !!dados.tag,
+      data: { url: dados.url || './' }
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (evento) => {
+  evento.notification.close();
+  const destino = new URL((evento.notification.data && evento.notification.data.url) || './', self.registration.scope).href;
+
+  evento.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((janelas) => {
+      const aberta = janelas.find((janela) => janela.url === destino);
+      return aberta ? aberta.focus() : self.clients.openWindow(destino);
+    })
+  );
+});

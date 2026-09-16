@@ -12,6 +12,7 @@ const ordersRoutes = require('./routes/orders');
 const settingsRoutes = require('./routes/settings');
 const acrescimosRoutes = require('./routes/acrescimos');
 const clientesRoutes = require('./routes/clientes');
+const notificacoes = require('./utils/notificacoes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,6 +47,10 @@ app.use('/api/configuracoes', settingsRoutes);
 app.use('/api/acrescimos', acrescimosRoutes);
 app.use('/api/clientes', clientesRoutes);
 
+app.get('/api/notificacoes/chave-publica', (req, res) => {
+  res.json({ chave: notificacoes.getChavePublica() });
+});
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.get('/admin', (req, res) => {
@@ -64,6 +69,7 @@ app.use((err, req, res, next) => {
 });
 
 db.init()
+  .then(() => notificacoes.iniciar())
   .then(() => {
     app.listen(PORT, () => {
       const modo = process.env.DATABASE_URL ? 'PostgreSQL' : 'arquivos JSON locais';

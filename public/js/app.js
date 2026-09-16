@@ -4,6 +4,11 @@ let acrescimosCatalogo = [];
 let carrinho = {}; // { [chave]: { item, quantidade, acrescimos: [{id,nome,preco}] } }
 let itemPendenteAcrescimo = null;
 
+const suportaAvisos = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const ehIphoneForaDoApp = /iphone|ipad|ipod/i.test(navigator.userAgent)
+  && !navigator.standalone
+  && !window.matchMedia('(display-mode: standalone)').matches;
+
 const formatarMoeda = (valor) => valor.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
 
 function renderizarMenu() {
@@ -230,6 +235,88 @@ function aplicarOpcoesDaLoja() {
   alternarCamposEndereco();
 }
 
+// ---------- Avisos no celular (Web Push) ----------
+
+function configurarBlocoAvisos() {
+  const disponivel = suportaAvisos && Notification.permission !== 'denied';
+  document.getElementById('bloco-avisos').hidden = !disponivel;
+  document.getElementById('dica-avisos-iphone').hidden = suportaAvisos || !ehIphoneForaDoApp;
+}
+
+function base64UrlParaBytes(base64Url) {
+  const base64 = (base64Url + '='.repeat((4 - (base64Url.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+}
+
+function mesmaChave(inscricao, chave) {
+  const atual = inscricao.options && inscricao.options.applicationServerKey;
+  if (!atual) return true;
+  const bytes = new Uint8Array(atual);
+  return bytes.length === chave.length && bytes.every((b, i) => b === chave[i]);
+}
+
+function comLimiteDeTempo(promessa, ms) {
+  return Promise.race([promessa, new Promise((resolve) => setTimeout(() => resolve(null), ms))]);
+}
+
+// Pede permissão e inscreve este navegador para receber avisos. Retorna null se não for possível.
+function obterInscricaoAvisos() {
+  // A permissão precisa ser pedida antes de qualquer "await" para contar como ação do usuário (Safari).
+  const permissao = new Promise((resolve) => {
+    const retorno = Notification.requestPermission(resolve);
+    if (retorno && retorno.then) retorno.then(resolve);
+  });
+
+  return (async () => {
+    try {
+      if (await permissao !== 'granted') return null;
+      const [registro, { chave }] = await Promise.all([navigator.serviceWorker.ready, API.getChavePush()]);
+      if (!chave) return null;
+
+      const applicationServerKey = base64UrlParaBytes(chave);
+      let inscricao = await registro.pushManager.getSubscription();
+      if (inscricao && !mesmaChave(inscricao, applicationServerKey)) {
+        await inscricao.unsubscribe();
+        inscricao = null;
+      }
+      if (!inscricao) {
+        inscricao = await registro.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+      }
+      return inscricao.toJSON();
+    } catch (err) {
+      console.warn('Não foi possível ativar os avisos no celular', err);
+      return null;
+    } finally {
+      configurarBlocoAvisos();
+    }
+  })();
+}
+
+function linkAcompanhamento(id, token) {
+  return `acompanhar.html?pedido=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`;
+}
+
+function guardarUltimoPedido(pedido) {
+  try {
+    localStorage.setItem('ultimoPedido', JSON.stringify({ id: pedido.id, token: pedido.tokenAcompanhamento }));
+  } catch (err) { /* navegador sem armazenamento local: só não mostra o atalho */ }
+  mostrarLinkUltimoPedido();
+}
+
+function mostrarLinkUltimoPedido() {
+  let ultimo = null;
+  try {
+    ultimo = JSON.parse(localStorage.getItem('ultimoPedido'));
+  } catch (err) { /* ignora */ }
+  const paragrafo = document.getElementById('link-ultimo-pedido');
+  if (!ultimo || !ultimo.id || !ultimo.token) {
+    paragrafo.hidden = true;
+    return;
+  }
+  paragrafo.querySelector('a').href = linkAcompanhamento(ultimo.id, ultimo.token);
+  paragrafo.hidden = false;
+}
+
 async function enviarPedido(evento) {
   evento.preventDefault();
   const erroBox = document.getElementById('erro-checkout');
@@ -261,8 +348,14 @@ async function enviarPedido(evento) {
   }));
 
   botao.disabled = true;
+  const querAvisos = suportaAvisos && !document.getElementById('bloco-avisos').hidden
+    && document.getElementById('campo-avisos').checked;
+  const promessaInscricao = querAvisos ? obterInscricaoAvisos() : null;
+
   try {
-    const pedido = await API.criarPedido({ itens, tipoEntrega, cliente, formaPagamento });
+    const inscricao = promessaInscricao ? await comLimiteDeTempo(promessaInscricao, 60000) : null;
+    const pedido = await API.criarPedido({ itens, tipoEntrega, cliente, formaPagamento, notificacoes: inscricao || undefined });
+    guardarUltimoPedido(pedido);
     carrinho = {};
     atualizarBarraCarrinho();
     fecharModal('modal-checkout');
@@ -278,7 +371,9 @@ async function enviarPedido(evento) {
     document.getElementById('mensagem-confirmacao').innerHTML = `
       ✅ Pedido <strong>${escaparHtml(pedido.id)}</strong> recebido!<br>
       Total: <strong>${formatarMoeda(pedido.total)}</strong><br>
-      Pagamento: ${textoPagamento}`;
+      Pagamento: ${textoPagamento}<br><br>
+      ${pedido.avisosAtivos ? '🔔 Você receberá um aviso no celular a cada mudança no pedido.<br>' : ''}
+      <a href="${escaparHtml(linkAcompanhamento(pedido.id, pedido.tokenAcompanhamento))}">Acompanhar pedido</a>`;
     abrirModal('modal-confirmacao');
   } catch (err) {
     const mensagem = document.createElement('div');
@@ -330,6 +425,8 @@ function configurarEventos() {
 
 async function iniciar() {
   configurarEventos();
+  configurarBlocoAvisos();
+  mostrarLinkUltimoPedido();
   try {
     [menu, configuracoes, acrescimosCatalogo] = await Promise.all([API.getMenu(), API.getConfiguracoes(), API.getAcrescimos()]);
     renderizarMenu();

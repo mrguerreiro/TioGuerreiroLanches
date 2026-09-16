@@ -1,9 +1,29 @@
+const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
 const { requireAdmin } = require('../middleware/auth');
 const { criarCheckoutPagSeguro } = require('../utils/pagseguro');
 const { gerarIdPedido } = require('../utils/ids');
+const notificacoes = require('../utils/notificacoes');
+
+// Remove dados internos antes de devolver o pedido (a inscrição de push vira só um indicador).
+function pedidoSemDadosInternos(pedido) {
+  const { pushInscricao, ...resto } = pedido;
+  return { ...resto, avisosAtivos: !!pushInscricao };
+}
+
+// Dispara a notificação sem atrasar a resposta; erros já são tratados dentro de notificarStatus.
+function notificarEmSegundoPlano(pedido) {
+  notificacoes.notificarStatus(pedido).catch((err) => console.error(err));
+}
+
+function tokenValido(recebido, esperado) {
+  if (typeof recebido !== 'string' || typeof esperado !== 'string') return false;
+  const a = Buffer.from(recebido);
+  const b = Buffer.from(esperado);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 
 function validarCliente(tipoEntrega, cliente) {
   if (!cliente || !cliente.nome || !cliente.telefone) {
@@ -37,7 +57,7 @@ function validarOpcoesDaLoja(settings, tipoEntrega, formaPagamento) {
 
 router.post('/', async (req, res) => {
   try {
-    const { itens, tipoEntrega, cliente, formaPagamento } = req.body || {};
+    const { itens, tipoEntrega, cliente, formaPagamento, notificacoes: inscricaoPush } = req.body || {};
 
     if (!Array.isArray(itens) || itens.length === 0) {
       return res.status(400).json({ erro: 'O pedido precisa ter ao menos um item.' });
@@ -117,7 +137,9 @@ router.post('/', async (req, res) => {
       taxaEntrega,
       total,
       formaPagamento,
-      pagamento: { status: formaPagamento === 'entrega_local' ? 'pendente_na_entrega' : 'pendente' }
+      pagamento: { status: formaPagamento === 'entrega_local' ? 'pendente_na_entrega' : 'pendente' },
+      tokenAcompanhamento: crypto.randomBytes(16).toString('hex'),
+      pushInscricao: inscricaoPush ? notificacoes.validarInscricao(inscricaoPush) : null
     };
 
     // Sem link de pagamento o pedido não é gravado, para não ficar um pedido "online" que ninguém consegue pagar.
@@ -144,7 +166,10 @@ router.post('/', async (req, res) => {
       endereco: pedido.cliente.endereco
     });
 
-    res.status(201).json(pedido);
+    // Primeira mensagem ao cliente: "Pedido recebido".
+    notificarEmSegundoPlano(pedido);
+
+    res.status(201).json(pedidoSemDadosInternos(pedido));
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: 'Erro ao processar o pedido.' });
@@ -154,7 +179,7 @@ router.post('/', async (req, res) => {
 router.get('/', requireAdmin, async (req, res, next) => {
   try {
     const orders = await db.getOrders();
-    res.json(orders.slice().reverse());
+    res.json(orders.slice().reverse().map(pedidoSemDadosInternos));
   } catch (err) {
     next(err);
   }
@@ -167,11 +192,42 @@ router.put('/:id/status', requireAdmin, async (req, res, next) => {
     if (!permitidos.includes(status)) {
       return res.status(400).json({ erro: 'Status inválido.' });
     }
-    const pedido = await db.updateOrderStatus(req.params.id, status);
-    if (!pedido) {
+    const atual = await db.getOrder(req.params.id);
+    if (!atual) {
       return res.status(404).json({ erro: 'Pedido não encontrado.' });
     }
-    res.json(pedido);
+    if (atual.status === status) {
+      return res.json(pedidoSemDadosInternos(atual));
+    }
+
+    const pedido = await db.updateOrder(req.params.id, { status });
+    notificarEmSegundoPlano(pedido);
+    res.json(pedidoSemDadosInternos(pedido));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Consulta pública do andamento do pedido (usada pela página de acompanhamento).
+// Exige o token entregue ao cliente e devolve só o necessário, sem dados pessoais.
+router.get('/:id/acompanhamento', async (req, res, next) => {
+  try {
+    const pedido = await db.getOrder(req.params.id);
+    if (!pedido || !tokenValido(req.query.token, pedido.tokenAcompanhamento)) {
+      return res.status(404).json({ erro: 'Pedido não encontrado.' });
+    }
+    res.json({
+      id: pedido.id,
+      criadoEm: pedido.criadoEm,
+      status: pedido.status,
+      tipoEntrega: pedido.tipoEntrega,
+      total: pedido.total,
+      itens: pedido.itens.map((it) => ({
+        nome: it.nome,
+        quantidade: it.quantidade,
+        acrescimos: (it.acrescimos || []).map((a) => a.nome)
+      }))
+    });
   } catch (err) {
     next(err);
   }

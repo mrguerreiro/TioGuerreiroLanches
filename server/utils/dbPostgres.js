@@ -58,6 +58,13 @@ async function init() {
   `);
   await pool.query('ALTER TABLE acrescimos ADD COLUMN IF NOT EXISTS pausado BOOLEAN NOT NULL DEFAULT false');
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS chaves_sistema (
+      id TEXT PRIMARY KEY,
+      dados JSONB NOT NULL
+    );
+  `);
+
   const { rows: menuRows } = await pool.query('SELECT COUNT(*)::int AS total FROM itens_cardapio');
   if (menuRows[0].total === 0) {
     let ordem = 0;
@@ -184,10 +191,16 @@ async function addOrder(pedido) {
   return pedido;
 }
 
-async function updateOrderStatus(id, status) {
+async function getOrder(id) {
+  const { rows } = await pool.query('SELECT dados FROM pedidos WHERE id = $1', [id]);
+  return rows[0] ? rows[0].dados : null;
+}
+
+// Mescla os campos informados no JSON do pedido (apenas as chaves enviadas são alteradas).
+async function updateOrder(id, campos) {
   const { rows } = await pool.query(
-    `UPDATE pedidos SET dados = jsonb_set(dados, '{status}', to_jsonb($2::text)) WHERE id = $1 RETURNING dados`,
-    [id, status]
+    'UPDATE pedidos SET dados = dados || $2::jsonb WHERE id = $1 RETURNING dados',
+    [id, JSON.stringify(campos)]
   );
   return rows[0] ? rows[0].dados : null;
 }
@@ -195,6 +208,19 @@ async function updateOrderStatus(id, status) {
 async function getSettings() {
   const { rows } = await pool.query('SELECT dados FROM configuracoes WHERE id = 1');
   return rows[0] ? rows[0].dados : settingsIniciais;
+}
+
+// Chaves internas do sistema (ex.: chaves das notificações), guardadas para sobreviver a reinícios.
+async function getChave(id) {
+  const { rows } = await pool.query('SELECT dados FROM chaves_sistema WHERE id = $1', [id]);
+  return rows[0] ? rows[0].dados : null;
+}
+
+async function saveChave(id, dados) {
+  await pool.query(
+    'INSERT INTO chaves_sistema (id, dados) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET dados = $2',
+    [id, dados]
+  );
 }
 
 async function saveSettings(settings) {
@@ -230,7 +256,8 @@ module.exports = {
   init,
   getMenu, addMenuItem, updateMenuItem, deleteMenuItem,
   getAcrescimos, addAcrescimo, updateAcrescimo, deleteAcrescimo,
-  getOrders, addOrder, updateOrderStatus,
+  getOrders, getOrder, addOrder, updateOrder,
   getSettings, saveSettings,
+  getChave, saveChave,
   upsertCliente, getClientes
 };

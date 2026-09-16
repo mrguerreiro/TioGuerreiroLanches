@@ -10,6 +10,7 @@ const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const CLIENTES_FILE = path.join(DATA_DIR, 'clientes.json');
 const ACRESCIMOS_FILE = path.join(DATA_DIR, 'acrescimos.json');
+const CHAVES_FILE = path.join(DATA_DIR, 'chaves.json');
 
 function readJson(file, valorPadrao) {
   if (!fs.existsSync(file)) return valorPadrao;
@@ -59,10 +60,19 @@ module.exports = {
 
   async getOrders() { return readJson(ORDERS_FILE, []); },
   async addOrder(pedido) { return adicionar(ORDERS_FILE, pedido); },
-  async updateOrderStatus(id, status) { return atualizar(ORDERS_FILE, id, { status }); },
+  async getOrder(id) { return readJson(ORDERS_FILE, []).find((p) => p.id === id) || null; },
+  async updateOrder(id, campos) { return atualizar(ORDERS_FILE, id, campos); },
 
   async getSettings() { return readJson(SETTINGS_FILE, {}); },
   async saveSettings(settings) { writeJson(SETTINGS_FILE, settings); },
+
+  // Chaves internas do sistema (ex.: chaves das notificações), guardadas para sobreviver a reinícios.
+  async getChave(id) { return readJson(CHAVES_FILE, {})[id] || null; },
+  async saveChave(id, dados) {
+    const chaves = readJson(CHAVES_FILE, {});
+    chaves[id] = dados;
+    writeJson(CHAVES_FILE, chaves);
+  },
 
   // Grava ou atualiza os dados do cliente (nome/endereço) sempre que ele faz um pedido, seja retirada ou entrega.
   async upsertCliente(cliente) {

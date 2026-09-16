@@ -55,8 +55,8 @@ No painel é possível:
 - Adicionar novos itens ao cardápio (lanches ou bebidas) — se nenhuma imagem for informada, uma imagem ilustrativa
   é gerada automaticamente nas cores da marca.
 - Pausar/reativar um item (fica visível mas indisponível para pedido).
-- Cadastrar, editar (nome e preço), pausar/reativar e excluir **acréscimos** (a lista de preços do site e a janela de escolha usam esses
-  dados; um acréscimo pausado aparece como indisponível e não pode ser escolhido).
+- Cadastrar, editar (nome e preço), pausar/reativar e excluir **acréscimos** (eles aparecem só na janela que abre ao escolher um
+  lanche; um acréscimo pausado aparece como indisponível e não pode ser escolhido).
 - Excluir um item definitivamente.
 - Alterar taxa de entrega, horário de funcionamento, WhatsApp e formas de entrega/pagamento aceitas. As opções
   desativadas somem do checkout e também são recusadas pelo servidor.

@@ -36,13 +36,6 @@ function renderizarMenu() {
   });
 }
 
-function renderizarListaAcrescimos() {
-  const lista = document.getElementById('lista-precos-acrescimos');
-  lista.innerHTML = acrescimosCatalogo.map((a) => `
-    <li class="${a.pausado ? 'acrescimo-pausado' : ''}"><span>${escaparHtml(a.nome)}${a.pausado ? ' <small>(indisponível)</small>' : ''}</span><span class="pontilhado"></span><span>${formatarMoeda(a.preco)}</span></li>`).join('');
-  document.getElementById('lista-acrescimos').hidden = acrescimosCatalogo.length === 0;
-}
-
 function adicionarAoCarrinho(id) {
   const item = menu.find((m) => m.id === id);
   if (!item || item.pausado) return;
@@ -340,7 +333,6 @@ async function iniciar() {
   try {
     [menu, configuracoes, acrescimosCatalogo] = await Promise.all([API.getMenu(), API.getConfiguracoes(), API.getAcrescimos()]);
     renderizarMenu();
-    renderizarListaAcrescimos();
     aplicarOpcoesDaLoja();
     if (configuracoes.horarioFuncionamento) {
       document.getElementById('horario-funcionamento').textContent = configuracoes.horarioFuncionamento;
@@ -350,7 +342,6 @@ async function iniciar() {
     // Sem servidor Node disponível (ex.: prévia estática no GitHub Pages) não há cardápio dinâmico nem pedidos.
     document.getElementById('grade-lanches').innerHTML = '';
     document.getElementById('grade-bebidas').innerHTML = '';
-    document.getElementById('lista-acrescimos').hidden = true;
     const aviso = document.createElement('p');
     aviso.className = 'mensagem-erro';
     aviso.textContent = 'Esta é uma prévia estática do site. Para ver o cardápio, fazer pedidos e usar o painel administrativo, é necessário rodar o servidor Node.js (veja o README do projeto).';

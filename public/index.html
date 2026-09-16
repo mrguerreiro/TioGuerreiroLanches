@@ -53,15 +53,8 @@
 
   <section id="lista-acrescimos">
     <h2 class="categoria-titulo">Acréscimos</h2>
-    <p class="texto-ajuda">Peça o acréscimo direto com quem atender seu pedido na retirada/entrega.</p>
-    <ul class="lista-precos-acrescimos">
-      <li><span>Hambúrguer / Salsicha</span><span class="pontilhado"></span><span>R$ 4,00</span></li>
-      <li><span>Frango / Queijo</span><span class="pontilhado"></span><span>R$ 4,00</span></li>
-      <li><span>Bacon / Calabresa</span><span class="pontilhado"></span><span>R$ 5,00</span></li>
-      <li><span>Catupiry</span><span class="pontilhado"></span><span>R$ 5,00</span></li>
-      <li><span>Ovo / Batata Palha</span><span class="pontilhado"></span><span>R$ 4,00</span></li>
-      <li><span>Salada / Vinagrete</span><span class="pontilhado"></span><span>R$ 4,00</span></li>
-    </ul>
+    <p class="texto-ajuda">Ao escolher um lanche, você terá a opção de adicionar os acréscimos desejados.</p>
+    <ul class="lista-precos-acrescimos" id="lista-precos-acrescimos"></ul>
     <button type="button" class="btn-voltar-topo" data-voltar-topo>⬆ Voltar ao topo</button>
   </section>
 </main>
@@ -108,8 +101,8 @@
     <form id="form-checkout">
       <label>Como você quer receber?</label>
       <div class="opcoes-toggle">
-        <label><input type="radio" name="tipoEntrega" value="retirada" checked><span>🏠 Retirar na loja</span></label>
-        <label><input type="radio" name="tipoEntrega" value="entrega"><span>🛵 Receber em casa</span></label>
+        <label id="opcao-retirada"><input type="radio" name="tipoEntrega" value="retirada" checked><span>🏠 Retirar na loja</span></label>
+        <label id="opcao-entrega"><input type="radio" name="tipoEntrega" value="entrega"><span>🛵 Receber em casa</span></label>
       </div>
 
       <label for="campo-nome">Nome completo</label>
@@ -133,14 +126,16 @@
 
       <label>Forma de pagamento</label>
       <div class="opcoes-toggle">
-        <label><input type="radio" name="formaPagamento" value="entrega_local" checked><span>💵 Na entrega/retirada</span></label>
-        <label><input type="radio" name="formaPagamento" value="online"><span>💳 Pagar agora (PagSeguro)</span></label>
+        <label id="opcao-pagamento-local"><input type="radio" name="formaPagamento" value="entrega_local" checked><span>💵 Na entrega/retirada</span></label>
+        <label id="opcao-pagamento-online"><input type="radio" name="formaPagamento" value="online"><span>💳 Pagar agora (PagSeguro)</span></label>
       </div>
 
+      <div class="linha-resumo"><span>Subtotal</span><span id="subtotal-checkout">R$ 0,00</span></div>
+      <div class="linha-resumo" id="linha-taxa-entrega" hidden><span>Taxa de entrega</span><span id="taxa-checkout">R$ 0,00</span></div>
       <div class="total-final"><span>Total do pedido</span><span id="total-checkout">R$ 0,00</span></div>
       <div id="erro-checkout"></div>
 
-      <button class="btn largura-total mt-10" type="submit">Confirmar pedido</button>
+      <button class="btn largura-total mt-10" type="submit" id="btn-confirmar-pedido">Confirmar pedido</button>
       <button class="btn secundario largura-total mt-8" type="button" id="btn-voltar-carrinho">Voltar</button>
     </form>
   </div>

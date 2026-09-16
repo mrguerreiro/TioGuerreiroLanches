@@ -14,6 +14,17 @@ function mostrarPainel(mostrar) {
   document.getElementById('tela-painel').style.display = mostrar ? 'block' : 'none';
 }
 
+// Mostra (ou limpa, se mensagem vazia) um erro dentro do elemento indicado, sempre como texto puro.
+function mostrarErro(idElemento, mensagem) {
+  const caixa = document.getElementById(idElemento);
+  caixa.innerHTML = '';
+  if (!mensagem) return;
+  const div = document.createElement('div');
+  div.className = 'mensagem-erro';
+  div.textContent = mensagem;
+  caixa.appendChild(div);
+}
+
 function configurarAbas() {
   document.querySelectorAll('.aba-botoes button[data-aba]').forEach((botao) => {
     botao.addEventListener('click', () => {
@@ -25,6 +36,13 @@ function configurarAbas() {
   });
 }
 
+function formatarItemPedido(it) {
+  const acrescimos = Array.isArray(it.acrescimos) && it.acrescimos.length > 0
+    ? ` (+ ${it.acrescimos.map((a) => a.nome).join(', ')})`
+    : '';
+  return `${it.quantidade}x ${it.nome}${acrescimos}`;
+}
+
 async function carregarPedidos() {
   const pedidos = await API.listarPedidos();
   const tbody = document.getElementById('tabela-pedidos');
@@ -32,31 +50,42 @@ async function carregarPedidos() {
 
   for (const pedido of pedidos) {
     const linha = document.createElement('tr');
-    const endereco = pedido.cliente.endereco
-      ? `${pedido.cliente.endereco.rua}, ${pedido.cliente.endereco.numero} - ${pedido.cliente.endereco.bairro}`
+    const e = pedido.cliente.endereco;
+    const endereco = e
+      ? `${e.rua}, ${e.numero}${e.complemento ? ` (${e.complemento})` : ''} - ${e.bairro}`
       : '';
-    const itensTexto = pedido.itens.map((it) => `${it.quantidade}x ${it.nome}`).join(', ');
+    const itensTexto = pedido.itens.map(formatarItemPedido).join(', ');
 
     linha.innerHTML = `
-      <td><strong>${pedido.id}</strong><br><small>${new Date(pedido.criadoEm).toLocaleString('pt-br')}</small><br><small>${itensTexto}</small></td>
-      <td>${pedido.cliente.nome}<br><small>${pedido.cliente.telefone}</small>${endereco ? `<br><small>${endereco}</small>` : ''}</td>
+      <td><strong>${escaparHtml(pedido.id)}</strong><br><small>${new Date(pedido.criadoEm).toLocaleString('pt-br')}</small><br><small>${escaparHtml(itensTexto)}</small></td>
+      <td>${escaparHtml(pedido.cliente.nome)}<br><small>${escaparHtml(pedido.cliente.telefone)}</small>${endereco ? `<br><small>${escaparHtml(endereco)}</small>` : ''}</td>
       <td>${pedido.tipoEntrega === 'entrega' ? 'Entrega' : 'Retirada'}</td>
       <td>${formatarMoeda(pedido.total)}</td>
       <td>${pedido.formaPagamento === 'online' ? 'Online (PagSeguro)' : 'Na entrega/retirada'}</td>
       <td>
-        <select data-id="${pedido.id}">
+        <select>
           ${Object.entries(STATUS_LABEL).map(([valor, rotulo]) => `<option value="${valor}" ${pedido.status === valor ? 'selected' : ''}>${rotulo}</option>`).join('')}
         </select>
       </td>
       <td></td>`;
+
+    const select = linha.querySelector('select');
+    select.dataset.statusAtual = pedido.status;
+    select.addEventListener('change', async () => {
+      select.disabled = true;
+      try {
+        await API.atualizarStatusPedido(pedido.id, select.value);
+        select.dataset.statusAtual = select.value;
+      } catch (err) {
+        select.value = select.dataset.statusAtual;
+        alert(`Não foi possível alterar o status do pedido ${pedido.id}: ${err.message}`);
+      } finally {
+        select.disabled = false;
+      }
+    });
+
     tbody.appendChild(linha);
   }
-
-  tbody.querySelectorAll('select[data-id]').forEach((select) => {
-    select.addEventListener('change', async () => {
-      await API.atualizarStatusPedido(select.dataset.id, select.value);
-    });
-  });
 }
 
 async function carregarClientes() {
@@ -70,9 +99,9 @@ async function carregarClientes() {
       : '—';
     const linha = document.createElement('tr');
     linha.innerHTML = `
-      <td>${cliente.nome}</td>
-      <td>${cliente.telefone}</td>
-      <td>${endereco}</td>
+      <td>${escaparHtml(cliente.nome)}</td>
+      <td>${escaparHtml(cliente.telefone)}</td>
+      <td>${escaparHtml(endereco)}</td>
       <td>${new Date(cliente.atualizadoEm).toLocaleString('pt-br')}</td>`;
     tbody.appendChild(linha);
   }
@@ -85,15 +114,18 @@ async function carregarCardapio() {
   containers.bebida.innerHTML = '';
 
   for (const item of menu) {
+    const container = containers[item.categoria];
+    if (!container) continue;
+
     const div = document.createElement('div');
     div.className = 'form-item';
     div.innerHTML = `
       <div class="linha-item-admin">
-        <img src="${item.imagem}" alt="" class="foto-item-admin">
+        <img src="${escaparHtml(item.imagem)}" alt="" class="foto-item-admin">
         <div class="info-item-admin">
-          <strong>${item.nome}</strong> — ${formatarMoeda(item.preco)}
+          <strong>${escaparHtml(item.nome)}</strong> — ${formatarMoeda(item.preco)}
           ${item.pausado ? '<span class="status-pausado"> (pausado)</span>' : ''}
-          <p class="descricao-item-admin">${item.descricao || ''}</p>
+          <p class="descricao-item-admin">${escaparHtml(item.descricao)}</p>
           <label class="rotulo-trocar-foto">
             Trocar foto
             <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="input-trocar-foto">
@@ -106,30 +138,87 @@ async function carregarCardapio() {
         </div>
       </div>`;
 
+    const erroSpan = div.querySelector('.erro-foto-item');
+
     div.querySelector('.btn-pausar').addEventListener('click', async () => {
-      await API.atualizarItem(item.id, { pausado: !item.pausado });
-      carregarCardapio();
+      erroSpan.textContent = '';
+      try {
+        await API.atualizarItem(item.id, { pausado: !item.pausado });
+        await carregarCardapio();
+      } catch (err) {
+        erroSpan.textContent = err.message;
+      }
     });
     div.querySelector('.btn-excluir').addEventListener('click', async () => {
       if (!confirm(`Excluir "${item.nome}" do cardápio?`)) return;
-      await API.excluirItem(item.id);
-      carregarCardapio();
+      erroSpan.textContent = '';
+      try {
+        await API.excluirItem(item.id);
+        await carregarCardapio();
+      } catch (err) {
+        erroSpan.textContent = err.message;
+      }
     });
     div.querySelector('.input-trocar-foto').addEventListener('change', async (evento) => {
       const arquivo = evento.target.files[0];
       if (!arquivo) return;
-      const erroSpan = div.querySelector('.erro-foto-item');
       erroSpan.textContent = '';
       try {
         const imagemBase64 = await lerArquivoComoBase64(arquivo);
         await API.atualizarImagemItem(item.id, imagemBase64);
-        carregarCardapio();
+        await carregarCardapio();
       } catch (err) {
         erroSpan.textContent = err.message;
       }
     });
 
-    containers[item.categoria].appendChild(div);
+    container.appendChild(div);
+  }
+}
+
+async function carregarAcrescimos() {
+  const acrescimos = await API.getAcrescimos();
+  const container = document.getElementById('lista-admin-acrescimos');
+  container.innerHTML = '';
+
+  if (acrescimos.length === 0) {
+    container.innerHTML = '<p class="texto-ajuda">Nenhum acréscimo cadastrado.</p>';
+    return;
+  }
+
+  for (const acrescimo of acrescimos) {
+    const form = document.createElement('form');
+    form.className = 'linha-acrescimo-admin';
+    form.innerHTML = `
+      <input name="nome" value="${escaparHtml(acrescimo.nome)}" required aria-label="Nome do acréscimo">
+      <input name="preco" type="number" step="0.01" min="0" value="${Number(acrescimo.preco)}" required aria-label="Preço do acréscimo">
+      <div class="acoes-item">
+        <button type="submit" class="btn-salvar">Salvar</button>
+        <button type="button" class="btn-excluir">Excluir</button>
+      </div>`;
+
+    form.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      mostrarErro('erro-acrescimo', '');
+      try {
+        await API.atualizarAcrescimo(acrescimo.id, { nome: form.nome.value, preco: form.preco.value });
+        await carregarAcrescimos();
+      } catch (err) {
+        mostrarErro('erro-acrescimo', err.message);
+      }
+    });
+    form.querySelector('.btn-excluir').addEventListener('click', async () => {
+      if (!confirm(`Excluir o acréscimo "${acrescimo.nome}"?`)) return;
+      mostrarErro('erro-acrescimo', '');
+      try {
+        await API.excluirAcrescimo(acrescimo.id);
+        await carregarAcrescimos();
+      } catch (err) {
+        mostrarErro('erro-acrescimo', err.message);
+      }
+    });
+
+    container.appendChild(form);
   }
 }
 
@@ -155,43 +244,71 @@ async function carregarConfiguracoes() {
   form.aceitaPagamentoOnline.checked = !!config.aceitaPagamentoOnline;
 }
 
+// Executa a ação e avisa com alert se algo der errado (usado nos botões "Atualizar" e afins).
+function comAvisoDeErro(acao) {
+  return async (...args) => {
+    try {
+      await acao(...args);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+}
+
 function configurarFormularios() {
   document.getElementById('form-login').addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const form = evento.target;
-    const erroBox = document.getElementById('erro-login');
-    erroBox.innerHTML = '';
+    mostrarErro('erro-login', '');
     try {
       await API.login(form.usuario.value, form.senha.value);
       await iniciarPainel();
     } catch (err) {
-      erroBox.innerHTML = `<div class="mensagem-erro">${err.message}</div>`;
+      mostrarErro('erro-login', err.message);
     }
   });
 
-  document.getElementById('btn-logout').addEventListener('click', async () => {
+  document.getElementById('btn-logout').addEventListener('click', comAvisoDeErro(async () => {
     await API.logout();
     mostrarPainel(false);
-  });
+  }));
 
-  document.getElementById('btn-atualizar-pedidos').addEventListener('click', carregarPedidos);
-  document.getElementById('btn-atualizar-clientes').addEventListener('click', carregarClientes);
+  document.getElementById('btn-atualizar-pedidos').addEventListener('click', comAvisoDeErro(carregarPedidos));
+  document.getElementById('btn-atualizar-clientes').addEventListener('click', comAvisoDeErro(carregarClientes));
 
   document.getElementById('form-novo-item').addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const form = evento.target;
-    await API.criarItem({
-      categoria: form.categoria.value,
-      nome: form.nome.value,
-      preco: form.preco.value,
-      imagem: form.imagem.value || undefined,
-      descricao: form.descricao.value
-    });
-    form.reset();
-    carregarCardapio();
+    mostrarErro('erro-novo-item', '');
+    try {
+      await API.criarItem({
+        categoria: form.categoria.value,
+        nome: form.nome.value,
+        preco: form.preco.value,
+        imagem: form.imagem.value || undefined,
+        descricao: form.descricao.value
+      });
+      form.reset();
+      await carregarCardapio();
+    } catch (err) {
+      mostrarErro('erro-novo-item', err.message);
+    }
   });
 
-  document.getElementById('form-config').addEventListener('submit', async (evento) => {
+  document.getElementById('form-novo-acrescimo').addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    const form = evento.target;
+    mostrarErro('erro-acrescimo', '');
+    try {
+      await API.criarAcrescimo({ nome: form.nome.value, preco: form.preco.value });
+      form.reset();
+      await carregarAcrescimos();
+    } catch (err) {
+      mostrarErro('erro-acrescimo', err.message);
+    }
+  });
+
+  document.getElementById('form-config').addEventListener('submit', comAvisoDeErro(async (evento) => {
     evento.preventDefault();
     const form = evento.target;
     await API.salvarConfiguracoes({
@@ -205,22 +322,27 @@ function configurarFormularios() {
       aceitaPagamentoOnline: form.aceitaPagamentoOnline.checked
     });
     alert('Configurações salvas.');
-  });
+  }));
 }
 
 async function iniciarPainel() {
   mostrarPainel(true);
-  await Promise.all([carregarPedidos(), carregarCardapio(), carregarClientes(), carregarConfiguracoes()]);
+  await Promise.all([carregarPedidos(), carregarCardapio(), carregarAcrescimos(), carregarClientes(), carregarConfiguracoes()]);
 }
 
 async function iniciar() {
   configurarAbas();
   configurarFormularios();
-  const { autenticado } = await API.statusAuth();
-  if (autenticado) {
-    await iniciarPainel();
-  } else {
+  try {
+    const { autenticado } = await API.statusAuth();
+    if (autenticado) {
+      await iniciarPainel();
+    } else {
+      mostrarPainel(false);
+    }
+  } catch (err) {
     mostrarPainel(false);
+    mostrarErro('erro-login', 'Não foi possível conectar ao servidor. O painel só funciona com o servidor Node.js rodando.');
   }
 }
 

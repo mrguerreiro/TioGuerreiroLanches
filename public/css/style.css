@@ -466,3 +466,12 @@ footer.rodape-site {
 .checkbox-inline { width: auto; display: inline-block; }
 .oculto-tela { display: none; }
 .btn-sair { margin-left: auto; border-color: #c0392b; color: #c0392b; }
+[hidden] { display: none !important; }
+
+.linha-resumo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.92rem;
+  color: var(--cinza);
+  margin-top: 10px;
+}

@@ -18,14 +18,14 @@ function renderizarMenu() {
     const card = document.createElement('div');
     card.className = 'card-produto';
     card.innerHTML = `
-      <img src="${item.imagem}" alt="Imagem ilustrativa de ${item.nome}" loading="lazy">
+      <img src="${escaparHtml(item.imagem)}" alt="Imagem ilustrativa de ${escaparHtml(item.nome)}" loading="lazy">
       <div class="corpo">
         ${item.pausado ? '<span class="selo-pausado">Indisponível no momento</span>' : ''}
-        <h3>${item.nome}</h3>
-        <p class="descricao">${item.descricao || ''}</p>
+        <h3>${escaparHtml(item.nome)}</h3>
+        <p class="descricao">${escaparHtml(item.descricao)}</p>
         <div class="rodape">
           <span class="preco">${formatarMoeda(item.preco)}</span>
-          <button class="btn" data-id="${item.id}" ${item.pausado ? 'disabled' : ''}>Adicionar</button>
+          <button class="btn" data-id="${escaparHtml(item.id)}" ${item.pausado ? 'disabled' : ''}>Adicionar</button>
         </div>
       </div>`;
     grade.appendChild(card);
@@ -34,6 +34,13 @@ function renderizarMenu() {
   document.querySelectorAll('.card-produto button[data-id]').forEach((btn) => {
     btn.addEventListener('click', () => adicionarAoCarrinho(btn.dataset.id));
   });
+}
+
+function renderizarListaAcrescimos() {
+  const lista = document.getElementById('lista-precos-acrescimos');
+  lista.innerHTML = acrescimosCatalogo.map((a) => `
+    <li><span>${escaparHtml(a.nome)}</span><span class="pontilhado"></span><span>${formatarMoeda(a.preco)}</span></li>`).join('');
+  document.getElementById('lista-acrescimos').hidden = acrescimosCatalogo.length === 0;
 }
 
 function adicionarAoCarrinho(id) {
@@ -68,8 +75,8 @@ function abrirModalAcrescimos(item) {
   lista.innerHTML = acrescimosCatalogo.map((a) => `
     <li>
       <label>
-        <input type="checkbox" value="${a.id}" data-preco="${a.preco}">
-        <span class="nome-acrescimo">${a.nome}</span>
+        <input type="checkbox" value="${escaparHtml(a.id)}" data-preco="${Number(a.preco)}">
+        <span class="nome-acrescimo">${escaparHtml(a.nome)}</span>
         <span class="preco-acrescimo">+ ${formatarMoeda(a.preco)}</span>
       </label>
     </li>`).join('');
@@ -142,12 +149,12 @@ function renderizarModalCarrinho() {
   for (const [chave, entrada] of entradas) {
     const { item, quantidade, acrescimos } = entrada;
     const textoAcrescimos = acrescimos.length > 0
-      ? `<br><small>+ ${acrescimos.map((a) => a.nome).join(', ')}</small>`
+      ? `<br><small>+ ${escaparHtml(acrescimos.map((a) => a.nome).join(', '))}</small>`
       : '';
     const linha = document.createElement('div');
     linha.className = 'linha-item-carrinho';
     linha.innerHTML = `
-      <span class="nome">${item.nome}<br><small>${formatarMoeda(precoUnitario(entrada))}</small>${textoAcrescimos}</span>
+      <span class="nome">${escaparHtml(item.nome)}<br><small>${formatarMoeda(precoUnitario(entrada))}</small>${textoAcrescimos}</span>
       <div class="qtd-controle">
         <button data-acao="menos">−</button>
         <span>${quantidade}</span>
@@ -164,12 +171,70 @@ function renderizarModalCarrinho() {
 function abrirModal(id) { document.getElementById(id).classList.remove('oculta'); }
 function fecharModal(id) { document.getElementById(id).classList.add('oculta'); }
 
+function tipoEntregaSelecionado() {
+  const marcado = document.querySelector('input[name="tipoEntrega"]:checked');
+  return marcado ? marcado.value : null;
+}
+
+function taxaEntregaAtual() {
+  return tipoEntregaSelecionado() === 'entrega' ? Number(configuracoes.taxaEntrega || 0) : 0;
+}
+
+function atualizarTotalCheckout() {
+  const subtotal = totalCarrinho();
+  const taxa = taxaEntregaAtual();
+  document.getElementById('subtotal-checkout').textContent = formatarMoeda(subtotal);
+  document.getElementById('taxa-checkout').textContent = taxa > 0 ? formatarMoeda(taxa) : 'Grátis';
+  document.getElementById('linha-taxa-entrega').hidden = tipoEntregaSelecionado() !== 'entrega';
+  document.getElementById('total-checkout').textContent = formatarMoeda(subtotal + taxa);
+}
+
 function alternarCamposEndereco() {
-  const tipo = document.querySelector('input[name="tipoEntrega"]:checked').value;
+  const tipo = tipoEntregaSelecionado();
   document.getElementById('campos-endereco').style.display = tipo === 'entrega' ? 'block' : 'none';
   document.querySelectorAll('#campos-endereco input').forEach((input) => {
-    input.required = tipo === 'entrega';
+    input.required = tipo === 'entrega' && input.name !== 'complemento';
   });
+  atualizarTotalCheckout();
+}
+
+// Mostra só as opções que a loja aceita (Configurações do painel) e marca a primeira disponível.
+function aplicarOpcaoDaLoja(nomeGrupo, opcoes) {
+  let algumaVisivel = false;
+  for (const { idRotulo, aceita } of opcoes) {
+    const rotulo = document.getElementById(idRotulo);
+    const input = rotulo.querySelector('input');
+    rotulo.hidden = !aceita;
+    input.disabled = !aceita;
+    if (!aceita) input.checked = false;
+    algumaVisivel = algumaVisivel || aceita;
+  }
+  const marcado = document.querySelector(`input[name="${nomeGrupo}"]:checked`);
+  if (!marcado) {
+    const primeiro = document.querySelector(`input[name="${nomeGrupo}"]:not(:disabled)`);
+    if (primeiro) primeiro.checked = true;
+  }
+  return algumaVisivel;
+}
+
+function aplicarOpcoesDaLoja() {
+  const temEntrega = aplicarOpcaoDaLoja('tipoEntrega', [
+    { idRotulo: 'opcao-retirada', aceita: configuracoes.aceitaRetirada !== false },
+    { idRotulo: 'opcao-entrega', aceita: configuracoes.aceitaEntrega !== false }
+  ]);
+  const temPagamento = aplicarOpcaoDaLoja('formaPagamento', [
+    { idRotulo: 'opcao-pagamento-local', aceita: configuracoes.aceitaPagamentoEntrega !== false },
+    { idRotulo: 'opcao-pagamento-online', aceita: configuracoes.aceitaPagamentoOnline !== false }
+  ]);
+
+  const podePedir = temEntrega && temPagamento;
+  document.getElementById('btn-confirmar-pedido').disabled = !podePedir;
+  const erroBox = document.getElementById('erro-checkout');
+  erroBox.innerHTML = '';
+  if (!podePedir) {
+    erroBox.innerHTML = '<div class="mensagem-erro">No momento a loja não está aceitando pedidos pelo site.</div>';
+  }
+  alternarCamposEndereco();
 }
 
 async function enviarPedido(evento) {
@@ -178,6 +243,7 @@ async function enviarPedido(evento) {
   erroBox.innerHTML = '';
 
   const form = evento.target;
+  const botao = document.getElementById('btn-confirmar-pedido');
   const tipoEntrega = form.tipoEntrega.value;
   const formaPagamento = form.formaPagamento.value;
 
@@ -201,6 +267,7 @@ async function enviarPedido(evento) {
     acrescimos: acrescimos.map((a) => a.id)
   }));
 
+  botao.disabled = true;
   try {
     const pedido = await API.criarPedido({ itens, tipoEntrega, cliente, formaPagamento });
     carrinho = {};
@@ -212,13 +279,21 @@ async function enviarPedido(evento) {
       return;
     }
 
+    const textoPagamento = pedido.formaPagamento === 'online'
+      ? 'online (a loja entrará em contato para concluir o pagamento).'
+      : 'na entrega/retirada.';
     document.getElementById('mensagem-confirmacao').innerHTML = `
-      ✅ Pedido <strong>${pedido.id}</strong> recebido!<br>
+      ✅ Pedido <strong>${escaparHtml(pedido.id)}</strong> recebido!<br>
       Total: <strong>${formatarMoeda(pedido.total)}</strong><br>
-      Pagamento: na entrega/retirada.`;
+      Pagamento: ${textoPagamento}`;
     abrirModal('modal-confirmacao');
   } catch (err) {
-    erroBox.innerHTML = `<div class="mensagem-erro">${err.message}</div>`;
+    const mensagem = document.createElement('div');
+    mensagem.className = 'mensagem-erro';
+    mensagem.textContent = err.message;
+    erroBox.appendChild(mensagem);
+  } finally {
+    botao.disabled = false;
   }
 }
 
@@ -231,7 +306,7 @@ function configurarEventos() {
 
   document.getElementById('btn-ir-checkout').addEventListener('click', () => {
     if (quantidadeTotalCarrinho() === 0) return;
-    document.getElementById('total-checkout').textContent = formatarMoeda(totalCarrinho());
+    aplicarOpcoesDaLoja();
     fecharModal('modal-carrinho');
     abrirModal('modal-checkout');
   });
@@ -252,7 +327,7 @@ function configurarEventos() {
   document.getElementById('btn-fechar-confirmacao').addEventListener('click', () => {
     fecharModal('modal-confirmacao');
     document.getElementById('form-checkout').reset();
-    alternarCamposEndereco();
+    aplicarOpcoesDaLoja();
   });
 
   document.querySelectorAll('[data-voltar-topo]').forEach((btn) => {
@@ -265,6 +340,8 @@ async function iniciar() {
   try {
     [menu, configuracoes, acrescimosCatalogo] = await Promise.all([API.getMenu(), API.getConfiguracoes(), API.getAcrescimos()]);
     renderizarMenu();
+    renderizarListaAcrescimos();
+    aplicarOpcoesDaLoja();
     if (configuracoes.horarioFuncionamento) {
       document.getElementById('horario-funcionamento').textContent = configuracoes.horarioFuncionamento;
     }
@@ -273,6 +350,7 @@ async function iniciar() {
     // Sem servidor Node disponível (ex.: prévia estática no GitHub Pages) não há cardápio dinâmico nem pedidos.
     document.getElementById('grade-lanches').innerHTML = '';
     document.getElementById('grade-bebidas').innerHTML = '';
+    document.getElementById('lista-acrescimos').hidden = true;
     const aviso = document.createElement('p');
     aviso.className = 'mensagem-erro';
     aviso.textContent = 'Esta é uma prévia estática do site. Para ver o cardápio, fazer pedidos e usar o painel administrativo, é necessário rodar o servidor Node.js (veja o README do projeto).';

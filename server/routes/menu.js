@@ -3,18 +3,10 @@ const router = express.Router();
 const db = require('../utils/db');
 const { requireAdmin } = require('../middleware/auth');
 const { buildProductSvgDataUri } = require('../utils/productImage');
+const { gerarIdPorNome } = require('../utils/ids');
 
 const MIME_SUPORTADOS = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
 const TAMANHO_MAXIMO_IMAGEM = 5 * 1024 * 1024; // 5MB
-
-function gerarId(nome) {
-  const slug = nome
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-  return `${slug}-${Date.now().toString(36)}`;
-}
 
 // Lista pública do cardápio
 router.get('/', async (req, res, next) => {
@@ -41,8 +33,7 @@ router.post('/', requireAdmin, async (req, res, next) => {
       return res.status(400).json({ erro: 'Preço inválido.' });
     }
 
-    const menu = await db.getMenu();
-    const id = gerarId(nome);
+    const id = gerarIdPorNome(nome);
     // Gera uma imagem ilustrativa automaticamente quando o admin não envia uma imagem própria.
     const caminhoImagem = imagem || buildProductSvgDataUri(nome, categoria);
 
@@ -55,9 +46,7 @@ router.post('/', requireAdmin, async (req, res, next) => {
       imagem: caminhoImagem,
       pausado: false
     };
-    menu.push(novoItem);
-    await db.saveMenu(menu);
-    res.status(201).json(novoItem);
+    res.status(201).json(await db.addMenuItem(novoItem));
   } catch (err) {
     next(err);
   }
@@ -66,30 +55,26 @@ router.post('/', requireAdmin, async (req, res, next) => {
 // Atualizar item (admin) - também usado para pausar/reativar
 router.put('/:id', requireAdmin, async (req, res, next) => {
   try {
-    const menu = await db.getMenu();
-    const idx = menu.findIndex((item) => item.id === req.params.id);
-    if (idx === -1) {
-      return res.status(404).json({ erro: 'Item não encontrado.' });
-    }
-
     const { nome, descricao, preco, imagem, categoria, pausado } = req.body || {};
-    const item = menu[idx];
+    const campos = {};
 
-    if (nome !== undefined) item.nome = String(nome).trim();
-    if (descricao !== undefined) item.descricao = String(descricao).trim();
-    if (categoria !== undefined && ['lanche', 'bebida'].includes(categoria)) item.categoria = categoria;
-    if (imagem !== undefined) item.imagem = imagem;
-    if (pausado !== undefined) item.pausado = !!pausado;
+    if (nome !== undefined) campos.nome = String(nome).trim();
+    if (descricao !== undefined) campos.descricao = String(descricao).trim();
+    if (categoria !== undefined && ['lanche', 'bebida'].includes(categoria)) campos.categoria = categoria;
+    if (imagem !== undefined) campos.imagem = imagem;
+    if (pausado !== undefined) campos.pausado = !!pausado;
     if (preco !== undefined) {
       const precoNum = Number(preco);
       if (Number.isNaN(precoNum) || precoNum < 0) {
         return res.status(400).json({ erro: 'Preço inválido.' });
       }
-      item.preco = precoNum;
+      campos.preco = precoNum;
     }
 
-    menu[idx] = item;
-    await db.saveMenu(menu);
+    const item = await db.updateMenuItem(req.params.id, campos);
+    if (!item) {
+      return res.status(404).json({ erro: 'Item não encontrado.' });
+    }
     res.json(item);
   } catch (err) {
     next(err);
@@ -119,15 +104,11 @@ router.put('/:id/imagem', requireAdmin, async (req, res, next) => {
       return res.status(400).json({ erro: 'Imagem muito grande. O tamanho máximo é 5MB.' });
     }
 
-    const menu = await db.getMenu();
-    const idx = menu.findIndex((item) => item.id === req.params.id);
-    if (idx === -1) {
+    const item = await db.updateMenuItem(req.params.id, { imagem: imagemBase64 });
+    if (!item) {
       return res.status(404).json({ erro: 'Item não encontrado.' });
     }
-
-    menu[idx].imagem = imagemBase64;
-    await db.saveMenu(menu);
-    res.json(menu[idx]);
+    res.json(item);
   } catch (err) {
     next(err);
   }
@@ -136,13 +117,10 @@ router.put('/:id/imagem', requireAdmin, async (req, res, next) => {
 // Excluir item (admin)
 router.delete('/:id', requireAdmin, async (req, res, next) => {
   try {
-    const menu = await db.getMenu();
-    const existe = menu.some((item) => item.id === req.params.id);
-    if (!existe) {
+    const excluido = await db.deleteMenuItem(req.params.id);
+    if (!excluido) {
       return res.status(404).json({ erro: 'Item não encontrado.' });
     }
-    const novoMenu = menu.filter((item) => item.id !== req.params.id);
-    await db.saveMenu(novoMenu);
     res.json({ ok: true });
   } catch (err) {
     next(err);

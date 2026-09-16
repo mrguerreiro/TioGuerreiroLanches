@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../utils/db');
 const { requireAdmin } = require('../middleware/auth');
 const { criarCheckoutPagSeguro } = require('../utils/pagseguro');
-const catalogoAcrescimos = require('../data/acrescimos.json');
+const { gerarIdPedido } = require('../utils/ids');
 
 function validarCliente(tipoEntrega, cliente) {
   if (!cliente || !cliente.nome || !cliente.telefone) {
@@ -14,6 +14,23 @@ function validarCliente(tipoEntrega, cliente) {
     if (!e.rua || !e.numero || !e.bairro || !e.cidade) {
       return 'Endereço completo (rua, número, bairro e cidade) é obrigatório para entrega.';
     }
+  }
+  return null;
+}
+
+// Recusa opções que a loja desativou em Configurações.
+function validarOpcoesDaLoja(settings, tipoEntrega, formaPagamento) {
+  if (tipoEntrega === 'entrega' && settings.aceitaEntrega === false) {
+    return 'No momento a loja não está fazendo entregas.';
+  }
+  if (tipoEntrega === 'retirada' && settings.aceitaRetirada === false) {
+    return 'No momento a loja não está aceitando pedidos para retirada.';
+  }
+  if (formaPagamento === 'entrega_local' && settings.aceitaPagamentoEntrega === false) {
+    return 'No momento a loja não aceita pagamento na entrega/retirada.';
+  }
+  if (formaPagamento === 'online' && settings.aceitaPagamentoOnline === false) {
+    return 'No momento a loja não aceita pagamento online.';
   }
   return null;
 }
@@ -37,8 +54,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ erro: erroCliente });
     }
 
-    const menu = await db.getMenu();
-    const settings = await db.getSettings();
+    const [menu, settings, catalogoAcrescimos] = await Promise.all([db.getMenu(), db.getSettings(), db.getAcrescimos()]);
+
+    const erroOpcoes = validarOpcoesDaLoja(settings, tipoEntrega, formaPagamento);
+    if (erroOpcoes) {
+      return res.status(400).json({ erro: erroOpcoes });
+    }
+
     const itensPedido = [];
 
     for (const it of itens) {
@@ -57,7 +79,7 @@ router.post('/', async (req, res) => {
         for (const idAcrescimo of it.acrescimos) {
           const acrescimo = catalogoAcrescimos.find((a) => a.id === idAcrescimo);
           if (!acrescimo) {
-            return res.status(400).json({ erro: `Acréscimo inválido: ${idAcrescimo}` });
+            return res.status(400).json({ erro: 'Um dos acréscimos escolhidos não está mais disponível. Remova o item do carrinho e adicione de novo.' });
           }
           acrescimosPedido.push({ id: acrescimo.id, nome: acrescimo.nome, preco: acrescimo.preco });
         }
@@ -77,15 +99,14 @@ router.post('/', async (req, res) => {
     const taxaEntrega = tipoEntrega === 'entrega' ? Number(settings.taxaEntrega || 0) : 0;
     const total = subtotal + taxaEntrega;
 
-    const orders = await db.getOrders();
     const pedido = {
-      id: `PED-${Date.now()}`,
+      id: gerarIdPedido(),
       criadoEm: new Date().toISOString(),
       status: 'recebido',
       tipoEntrega,
       cliente: {
-        nome: cliente.nome,
-        telefone: cliente.telefone,
+        nome: String(cliente.nome).trim(),
+        telefone: String(cliente.telefone).trim(),
         endereco: tipoEntrega === 'entrega' ? cliente.endereco : null
       },
       itens: itensPedido,
@@ -96,18 +117,26 @@ router.post('/', async (req, res) => {
       pagamento: { status: formaPagamento === 'entrega_local' ? 'pendente_na_entrega' : 'pendente' }
     };
 
+    // Sem link de pagamento o pedido não é gravado, para não ficar um pedido "online" que ninguém consegue pagar.
     if (formaPagamento === 'online') {
-      const checkout = await criarCheckoutPagSeguro(pedido);
+      let checkout;
+      try {
+        checkout = await criarCheckoutPagSeguro(pedido);
+      } catch (err) {
+        console.error('Falha ao criar checkout no PagSeguro:', err);
+      }
+      if (!checkout || !checkout.linkCheckout) {
+        return res.status(502).json({ erro: 'Não foi possível gerar o link de pagamento online agora. Tente novamente ou escolha pagar na entrega/retirada.' });
+      }
       pedido.pagamento.linkCheckout = checkout.linkCheckout;
       pedido.pagamento.referencia = checkout.referencia;
     }
 
-    orders.push(pedido);
-    await db.saveOrders(orders);
+    await db.addOrder(pedido);
 
     // Guarda/atualiza o cadastro do cliente (nome, telefone e endereço quando houver) no banco de dados.
     await db.upsertCliente({
-      telefone: cliente.telefone.replace(/\D/g, ''),
+      telefone: pedido.cliente.telefone.replace(/\D/g, ''),
       nome: pedido.cliente.nome,
       endereco: pedido.cliente.endereco
     });
@@ -135,14 +164,11 @@ router.put('/:id/status', requireAdmin, async (req, res, next) => {
     if (!permitidos.includes(status)) {
       return res.status(400).json({ erro: 'Status inválido.' });
     }
-    const orders = await db.getOrders();
-    const idx = orders.findIndex((o) => o.id === req.params.id);
-    if (idx === -1) {
+    const pedido = await db.updateOrderStatus(req.params.id, status);
+    if (!pedido) {
       return res.status(404).json({ erro: 'Pedido não encontrado.' });
     }
-    orders[idx].status = status;
-    await db.saveOrders(orders);
-    res.json(orders[idx]);
+    res.json(pedido);
   } catch (err) {
     next(err);
   }

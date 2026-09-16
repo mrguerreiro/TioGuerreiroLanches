@@ -81,6 +81,9 @@ router.post('/', async (req, res) => {
           if (!acrescimo) {
             return res.status(400).json({ erro: 'Um dos acréscimos escolhidos não está mais disponível. Remova o item do carrinho e adicione de novo.' });
           }
+          if (acrescimo.pausado) {
+            return res.status(400).json({ erro: `O acréscimo "${acrescimo.nome}" está indisponível no momento. Remova o item do carrinho e adicione de novo.` });
+          }
           acrescimosPedido.push({ id: acrescimo.id, nome: acrescimo.nome, preco: acrescimo.preco });
         }
       }

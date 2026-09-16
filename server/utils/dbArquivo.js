@@ -52,7 +52,7 @@ module.exports = {
   async updateMenuItem(id, campos) { return atualizar(MENU_FILE, id, campos); },
   async deleteMenuItem(id) { return excluir(MENU_FILE, id); },
 
-  async getAcrescimos() { return readJson(ACRESCIMOS_FILE, []); },
+  async getAcrescimos() { return readJson(ACRESCIMOS_FILE, []).map((a) => ({ ...a, pausado: !!a.pausado })); },
   async addAcrescimo(acrescimo) { return adicionar(ACRESCIMOS_FILE, acrescimo); },
   async updateAcrescimo(id, campos) { return atualizar(ACRESCIMOS_FILE, id, campos); },
   async deleteAcrescimo(id) { return excluir(ACRESCIMOS_FILE, id); },

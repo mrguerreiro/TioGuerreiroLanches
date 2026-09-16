@@ -39,7 +39,7 @@ function renderizarMenu() {
 function renderizarListaAcrescimos() {
   const lista = document.getElementById('lista-precos-acrescimos');
   lista.innerHTML = acrescimosCatalogo.map((a) => `
-    <li><span>${escaparHtml(a.nome)}</span><span class="pontilhado"></span><span>${formatarMoeda(a.preco)}</span></li>`).join('');
+    <li class="${a.pausado ? 'acrescimo-pausado' : ''}"><span>${escaparHtml(a.nome)}${a.pausado ? ' <small>(indisponível)</small>' : ''}</span><span class="pontilhado"></span><span>${formatarMoeda(a.preco)}</span></li>`).join('');
   document.getElementById('lista-acrescimos').hidden = acrescimosCatalogo.length === 0;
 }
 
@@ -47,7 +47,7 @@ function adicionarAoCarrinho(id) {
   const item = menu.find((m) => m.id === id);
   if (!item || item.pausado) return;
 
-  if (item.categoria === 'lanche' && acrescimosCatalogo.length > 0) {
+  if (item.categoria === 'lanche' && acrescimosCatalogo.some((a) => !a.pausado)) {
     abrirModalAcrescimos(item);
     return;
   }
@@ -75,8 +75,8 @@ function abrirModalAcrescimos(item) {
   lista.innerHTML = acrescimosCatalogo.map((a) => `
     <li>
       <label>
-        <input type="checkbox" value="${escaparHtml(a.id)}" data-preco="${Number(a.preco)}">
-        <span class="nome-acrescimo">${escaparHtml(a.nome)}</span>
+        <input type="checkbox" value="${escaparHtml(a.id)}" data-preco="${Number(a.preco)}" ${a.pausado ? 'disabled' : ''}>
+        <span class="nome-acrescimo">${escaparHtml(a.nome)}${a.pausado ? ' <small>(indisponível)</small>' : ''}</span>
         <span class="preco-acrescimo">+ ${formatarMoeda(a.preco)}</span>
       </label>
     </li>`).join('');

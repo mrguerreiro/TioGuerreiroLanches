@@ -175,6 +175,15 @@ header.topo .titulo p {
   color: var(--preto);
 }
 
+.lista-precos-acrescimos li.acrescimo-pausado,
+.lista-selecao-acrescimos li:has(input:disabled) {
+  opacity: 0.55;
+}
+
+.lista-selecao-acrescimos li:has(input:disabled) label {
+  cursor: not-allowed;
+}
+
 .lista-precos-acrescimos li:last-child {
   border-bottom: none;
 }

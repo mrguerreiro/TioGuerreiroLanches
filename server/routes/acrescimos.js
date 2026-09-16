@@ -28,7 +28,7 @@ router.post('/', requireAdmin, async (req, res, next) => {
     if (preco === undefined || preco === null || preco === '' || precoNum === null) {
       return res.status(400).json({ erro: 'Preço inválido.' });
     }
-    const novo = await db.addAcrescimo({ id: gerarIdPorNome(nome), nome: String(nome).trim(), preco: precoNum });
+    const novo = await db.addAcrescimo({ id: gerarIdPorNome(nome), nome: String(nome).trim(), preco: precoNum, pausado: false });
     res.status(201).json(novo);
   } catch (err) {
     next(err);
@@ -37,8 +37,9 @@ router.post('/', requireAdmin, async (req, res, next) => {
 
 router.put('/:id', requireAdmin, async (req, res, next) => {
   try {
-    const { nome, preco } = req.body || {};
+    const { nome, preco, pausado } = req.body || {};
     const campos = {};
+    if (pausado !== undefined) campos.pausado = !!pausado;
     if (nome !== undefined) {
       if (!String(nome).trim()) return res.status(400).json({ erro: 'Nome do acréscimo é obrigatório.' });
       campos.nome = String(nome).trim();

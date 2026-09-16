@@ -187,27 +187,46 @@ async function carregarAcrescimos() {
   }
 
   for (const acrescimo of acrescimos) {
-    const form = document.createElement('form');
-    form.className = 'linha-acrescimo-admin';
-    form.innerHTML = `
-      <input name="nome" value="${escaparHtml(acrescimo.nome)}" required aria-label="Nome do acréscimo">
-      <input name="preco" type="number" step="0.01" min="0" value="${Number(acrescimo.preco)}" required aria-label="Preço do acréscimo">
+    container.appendChild(montarLinhaAcrescimo(acrescimo));
+  }
+}
+
+// Cada linha é um formulário com dois modos: visualização (Editar/Pausar/Excluir) e edição (Salvar/Cancelar).
+function montarLinhaAcrescimo(acrescimo) {
+  const linha = document.createElement('form');
+  linha.className = 'linha-acrescimo-admin';
+
+  function mostrarVisualizacao() {
+    linha.innerHTML = `
+      <span class="info-item-admin">
+        <strong>${escaparHtml(acrescimo.nome)}</strong> — ${formatarMoeda(acrescimo.preco)}
+        ${acrescimo.pausado ? '<span class="status-pausado"> (pausado)</span>' : ''}
+      </span>
       <div class="acoes-item">
-        <button type="submit" class="btn-salvar">Salvar</button>
+        <button type="button" class="btn-editar">Editar</button>
+        <button type="button" class="btn-pausar">${acrescimo.pausado ? 'Reativar' : 'Pausar'}</button>
         <button type="button" class="btn-excluir">Excluir</button>
       </div>`;
 
-    form.addEventListener('submit', async (evento) => {
-      evento.preventDefault();
+    linha.querySelector('.btn-editar').addEventListener('click', () => {
       mostrarErro('erro-acrescimo', '');
+      mostrarEdicao();
+    });
+
+    const botaoPausar = linha.querySelector('.btn-pausar');
+    botaoPausar.addEventListener('click', async () => {
+      mostrarErro('erro-acrescimo', '');
+      botaoPausar.disabled = true;
       try {
-        await API.atualizarAcrescimo(acrescimo.id, { nome: form.nome.value, preco: form.preco.value });
+        await API.atualizarAcrescimo(acrescimo.id, { pausado: !acrescimo.pausado });
         await carregarAcrescimos();
       } catch (err) {
+        botaoPausar.disabled = false;
         mostrarErro('erro-acrescimo', err.message);
       }
     });
-    form.querySelector('.btn-excluir').addEventListener('click', async () => {
+
+    linha.querySelector('.btn-excluir').addEventListener('click', async () => {
       if (!confirm(`Excluir o acréscimo "${acrescimo.nome}"?`)) return;
       mostrarErro('erro-acrescimo', '');
       try {
@@ -217,9 +236,40 @@ async function carregarAcrescimos() {
         mostrarErro('erro-acrescimo', err.message);
       }
     });
-
-    container.appendChild(form);
   }
+
+  function mostrarEdicao() {
+    linha.innerHTML = `
+      <input name="nome" value="${escaparHtml(acrescimo.nome)}" required aria-label="Nome do acréscimo">
+      <input name="preco" type="number" step="0.01" min="0" value="${Number(acrescimo.preco)}" required aria-label="Preço do acréscimo (R$)">
+      <div class="acoes-item">
+        <button type="submit" class="btn-salvar">Salvar</button>
+        <button type="button" class="btn-cancelar">Cancelar</button>
+      </div>`;
+
+    linha.querySelector('.btn-cancelar').addEventListener('click', () => {
+      mostrarErro('erro-acrescimo', '');
+      mostrarVisualizacao();
+    });
+    linha.nome.focus();
+  }
+
+  linha.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    mostrarErro('erro-acrescimo', '');
+    const botaoSalvar = linha.querySelector('.btn-salvar');
+    botaoSalvar.disabled = true;
+    try {
+      await API.atualizarAcrescimo(acrescimo.id, { nome: linha.nome.value, preco: linha.preco.value });
+      await carregarAcrescimos();
+    } catch (err) {
+      botaoSalvar.disabled = false;
+      mostrarErro('erro-acrescimo', err.message);
+    }
+  });
+
+  mostrarVisualizacao();
+  return linha;
 }
 
 function lerArquivoComoBase64(arquivo) {

@@ -56,6 +56,7 @@ async function init() {
       ordem INTEGER NOT NULL DEFAULT 0
     );
   `);
+  await pool.query('ALTER TABLE acrescimos ADD COLUMN IF NOT EXISTS pausado BOOLEAN NOT NULL DEFAULT false');
 
   const { rows: menuRows } = await pool.query('SELECT COUNT(*)::int AS total FROM itens_cardapio');
   if (menuRows[0].total === 0) {
@@ -97,7 +98,7 @@ function linhaParaItem(row) {
 }
 
 function linhaParaAcrescimo(row) {
-  return { id: row.id, nome: row.nome, preco: Number(row.preco) };
+  return { id: row.id, nome: row.nome, preco: Number(row.preco), pausado: row.pausado };
 }
 
 // Insere no fim da lista (ordem = maior ordem + 1).
@@ -159,12 +160,12 @@ async function getAcrescimos() {
 }
 
 async function addAcrescimo(acrescimo) {
-  const row = await inserirComOrdem('acrescimos', ['id', 'nome', 'preco'], [acrescimo.id, acrescimo.nome, acrescimo.preco]);
+  const row = await inserirComOrdem('acrescimos', ['id', 'nome', 'preco', 'pausado'], [acrescimo.id, acrescimo.nome, acrescimo.preco, !!acrescimo.pausado]);
   return linhaParaAcrescimo(row);
 }
 
 async function updateAcrescimo(id, campos) {
-  const row = await atualizarColunas('acrescimos', ['nome', 'preco'], id, campos);
+  const row = await atualizarColunas('acrescimos', ['nome', 'preco', 'pausado'], id, campos);
   return row ? linhaParaAcrescimo(row) : null;
 }
 

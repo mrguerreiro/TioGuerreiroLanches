@@ -196,6 +196,14 @@ function alternarCamposEndereco() {
   atualizarTotalCheckout();
 }
 
+// Deixa claro que o pagamento online começa ao confirmar o pedido (escolher a opção só seleciona).
+function atualizarBotaoConfirmar() {
+  const online = document.querySelector('input[name="formaPagamento"]:checked')?.value === 'online';
+  document.getElementById('btn-confirmar-pedido').textContent = online
+    ? 'Confirmar e ir para o pagamento'
+    : 'Confirmar pedido';
+}
+
 // Mostra só as opções que a loja aceita (Configurações do painel) e marca a primeira disponível.
 function aplicarOpcaoDaLoja(nomeGrupo, opcoes) {
   let algumaVisivel = false;
@@ -233,6 +241,7 @@ function aplicarOpcoesDaLoja() {
     erroBox.innerHTML = '<div class="mensagem-erro">No momento a loja não está aceitando pedidos pelo site.</div>';
   }
   alternarCamposEndereco();
+  atualizarBotaoConfirmar();
 }
 
 // ---------- Avisos no celular (Web Push) ----------
@@ -404,6 +413,7 @@ function configurarEventos() {
   });
 
   document.querySelectorAll('input[name="tipoEntrega"]').forEach((el) => el.addEventListener('change', alternarCamposEndereco));
+  document.querySelectorAll('input[name="formaPagamento"]').forEach((el) => el.addEventListener('change', atualizarBotaoConfirmar));
   document.getElementById('form-checkout').addEventListener('submit', enviarPedido);
 
   document.getElementById('btn-confirmar-acrescimos').addEventListener('click', confirmarAcrescimos);

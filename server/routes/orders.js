@@ -25,6 +25,21 @@ function tokenValido(recebido, esperado) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+// Endereço público do site, usado nos links que o PagBank chama/abre (avisos e retorno do cliente).
+// No Render o RENDER_EXTERNAL_URL já vem preenchido; SITE_URL permite usar um domínio próprio.
+function urlBaseDoSite(req) {
+  const url = process.env.SITE_URL || process.env.RENDER_EXTERNAL_URL || `${req.protocol}://${req.get('host')}`;
+  return url.replace(/\/+$/, '');
+}
+
+// O link de pagamento só é oferecido enquanto o pagamento não foi feito e o link não venceu
+// (depois de um cartão recusado o cliente pode tentar de novo no mesmo link).
+function linkPagamentoAindaValido(pagamento) {
+  if (!pagamento || !['pendente', 'recusado'].includes(pagamento.status) || !pagamento.linkCheckout) return null;
+  if (pagamento.expiraEm && new Date(pagamento.expiraEm) <= new Date()) return null;
+  return pagamento.linkCheckout;
+}
+
 function validarCliente(tipoEntrega, cliente) {
   if (!cliente || !cliente.nome || !cliente.telefone) {
     return 'Nome e telefone são obrigatórios.';
@@ -146,7 +161,7 @@ router.post('/', async (req, res) => {
     if (formaPagamento === 'online') {
       let checkout;
       try {
-        checkout = await criarCheckoutPagSeguro(pedido);
+        checkout = await criarCheckoutPagSeguro(pedido, urlBaseDoSite(req));
       } catch (err) {
         console.error('Falha ao criar checkout no PagSeguro:', err);
       }
@@ -155,6 +170,7 @@ router.post('/', async (req, res) => {
       }
       pedido.pagamento.linkCheckout = checkout.linkCheckout;
       pedido.pagamento.referencia = checkout.referencia;
+      pedido.pagamento.expiraEm = checkout.expiraEm;
     }
 
     await db.addOrder(pedido);
@@ -222,6 +238,12 @@ router.get('/:id/acompanhamento', async (req, res, next) => {
       status: pedido.status,
       tipoEntrega: pedido.tipoEntrega,
       total: pedido.total,
+      formaPagamento: pedido.formaPagamento,
+      pagamento: {
+        status: pedido.pagamento ? pedido.pagamento.status : null,
+        expiraEm: pedido.pagamento ? pedido.pagamento.expiraEm || null : null,
+        linkCheckout: linkPagamentoAindaValido(pedido.pagamento)
+      },
       itens: pedido.itens.map((it) => ({
         nome: it.nome,
         quantidade: it.quantidade,

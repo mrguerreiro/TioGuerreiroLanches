@@ -52,6 +52,31 @@ function renderizarLinhaTempo(pedido) {
   }).join('');
 }
 
+function textoPagamento(pedido) {
+  if (pedido.formaPagamento !== 'online') return 'Pagamento: na entrega/retirada.';
+  const TEXTOS = {
+    pago: 'Pagamento: ✅ confirmado online.',
+    em_analise: 'Pagamento: em análise pelo PagBank. Assim que for aprovado, esta página mostra.',
+    recusado: 'Pagamento: recusado. Tente de novo ou pague na entrega/retirada.',
+    cancelado: 'Pagamento: cancelado. Em caso de dúvida, fale com a loja.',
+    valor_divergente: 'Pagamento: recebido, mas a loja precisa conferir. Em caso de dúvida, fale com a loja.'
+  };
+  if (TEXTOS[pedido.pagamento.status]) return TEXTOS[pedido.pagamento.status];
+  return pedido.pagamento.linkCheckout
+    ? 'Pagamento: aguardando. Se você já pagou, a confirmação pode levar alguns instantes.'
+    : 'Pagamento: o link de pagamento online expirou. O pagamento será feito na entrega/retirada.';
+}
+
+function renderizarPagamento(pedido) {
+  document.getElementById('pagamento-pedido').textContent = textoPagamento(pedido);
+  const botao = document.getElementById('btn-pagar-agora');
+  const link = pedido.pagamento && pedido.pagamento.linkCheckout;
+  // Só aceita links https ou do próprio site, para o endereço nunca virar código (ex.: "javascript:").
+  const linkSeguro = link && /^(https:\/\/|\/)/.test(link) ? link : null;
+  botao.hidden = !linkSeguro || pedido.status === 'cancelado';
+  if (linkSeguro) botao.href = linkSeguro;
+}
+
 function renderizarPedido(pedido) {
   document.getElementById('titulo-pedido').textContent = `Pedido ${pedido.id}`;
   document.getElementById('info-pedido').textContent =
@@ -65,6 +90,7 @@ function renderizarPedido(pedido) {
     return `${it.quantidade}x ${escaparHtml(it.nome)}${acrescimos}`;
   }).join('<br>');
   document.getElementById('total-pedido').textContent = formatarMoeda(pedido.total);
+  renderizarPagamento(pedido);
 
   document.getElementById('carregando').hidden = true;
   document.getElementById('erro-acompanhamento').hidden = true;

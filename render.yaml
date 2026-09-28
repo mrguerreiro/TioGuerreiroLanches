@@ -14,8 +14,6 @@ services:
         value: admin
       - key: ADMIN_PASSWORD
         sync: false
-      - key: PAGSEGURO_EMAIL
-        sync: false
       - key: PAGSEGURO_TOKEN
         sync: false
       - key: PAGSEGURO_SANDBOX

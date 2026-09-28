@@ -37,14 +37,26 @@ Se `ADMIN_PASSWORD` não estiver definida, o login do painel fica bloqueado (nã
 Por padrão (sem credenciais configuradas), a opção "Pagar agora" abre uma página de simulação, apenas para fins de
 demonstração. Para habilitar cobranças reais:
 
-1. Crie uma conta/aplicação no [PagBank/PagSeguro Developers](https://dev.pagbank.uol.com.br/).
-2. Gere um token de API (sandbox ou produção).
-3. Preencha no `.env`:
+1. Crie uma conta no [Portal do Desenvolvedor PagBank](https://developer.pagbank.com.br/) e gere o token de sandbox
+   (testes). O token de produção é gerado na sua conta PagBank, na área de integrações.
+2. Preencha no `.env` (ou em **Environment** no Render):
    ```
    PAGSEGURO_TOKEN=seu-token
-   PAGSEGURO_SANDBOX=true  (ou false em produção)
+   PAGSEGURO_SANDBOX=true  (ou false em produção, com o token de produção)
    ```
-4. Reinicie o servidor. O checkout passará a redirecionar para o link real de pagamento do PagSeguro.
+3. Reinicie o servidor. O checkout passará a redirecionar para o link real de pagamento do PagSeguro.
+
+Como funciona:
+- O pedido entra na hora no painel, mesmo antes de ser pago. A coluna **Pagamento** mostra se ele está
+  aguardando, pago, recusado ou se o link expirou.
+- O link de pagamento vale 60 minutos. Se o cliente não pagar nesse tempo, o pedido continua valendo e o painel
+  avisa para cobrar na entrega/retirada.
+- O PagBank avisa o site em `/api/pagamentos/notificacao` sempre que o pagamento muda. O site não confia no
+  conteúdo do aviso: ele reconsulta o pagamento na API do PagBank antes de marcar o pedido como pago.
+- Depois de pagar, o cliente volta para a página de acompanhamento do pedido, que também tem o botão
+  "Pagar agora" enquanto o link estiver válido.
+- Os avisos e o retorno só funcionam com o site publicado em https (ex.: Render). Rodando localmente, o checkout
+  é criado, mas o status do pagamento não é atualizado.
 
 ## Painel administrativo
 
@@ -116,7 +128,7 @@ Passo a passo:
 2. No painel do Render, clique em **New +** → **Blueprint**.
 3. Selecione o repositório `TioGuerreiroLanches` (autorize o Render a acessar sua conta do GitHub se pedido).
 4. O Render vai detectar o `render.yaml` automaticamente. Confirme a criação do serviço.
-5. Quando pedir os valores de `ADMIN_PASSWORD`, `PAGSEGURO_EMAIL` e `PAGSEGURO_TOKEN`, preencha (ou deixe em
+5. Quando pedir os valores de `ADMIN_PASSWORD` e `PAGSEGURO_TOKEN`, preencha (ou deixe em
    branco para configurar depois em **Environment** nas configurações do serviço).
 6. Aguarde o build/deploy terminar. O Render vai gerar uma URL pública, algo como
    `https://tio-guerreiro-lanches.onrender.com` — esse link já abre o site completo e funcional.

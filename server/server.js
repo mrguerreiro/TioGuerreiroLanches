@@ -12,6 +12,7 @@ const ordersRoutes = require('./routes/orders');
 const settingsRoutes = require('./routes/settings');
 const acrescimosRoutes = require('./routes/acrescimos');
 const clientesRoutes = require('./routes/clientes');
+const pagamentosRoutes = require('./routes/pagamentos');
 const notificacoes = require('./utils/notificacoes');
 
 const app = express();
@@ -32,6 +33,8 @@ if (!process.env.ADMIN_PASSWORD) {
 app.set('trust proxy', 1);
 
 app.use(cors());
+// Avisos do PagBank antes do express.json: a rota precisa do corpo bruto para conferir a assinatura.
+app.use('/api/pagamentos', pagamentosRoutes);
 app.use(express.json({ limit: '8mb' }));
 app.use(session({
   secret: sessionSecret,

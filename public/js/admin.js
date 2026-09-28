@@ -36,6 +36,34 @@ function configurarAbas() {
   });
 }
 
+// Texto e cor da situação do pagamento. Pedido online que não foi pago continua valendo: a cobrança vai para a entrega/retirada.
+function situacaoPagamento(pedido) {
+  if (pedido.formaPagamento !== 'online') return { texto: 'Na entrega/retirada', classe: '' };
+
+  const pagamento = pedido.pagamento || {};
+  const linkVencido = pagamento.expiraEm && new Date(pagamento.expiraEm) <= new Date();
+  const cobrarNaEntrega = ' — cobrar na entrega/retirada';
+
+  switch (pagamento.status) {
+    case 'pago':
+      return { texto: '✅ Pago online', classe: 'pagamento-ok' };
+    case 'em_analise':
+      return { texto: 'Online: em análise no PagBank', classe: 'pagamento-aguardando' };
+    case 'recusado':
+      return { texto: `Online: pagamento recusado${linkVencido ? cobrarNaEntrega : ''}`, classe: 'pagamento-problema' };
+    case 'cancelado':
+      return { texto: 'Online: pagamento cancelado/estornado', classe: 'pagamento-problema' };
+    case 'valor_divergente':
+      return { texto: '⚠ Online: valor pago diferente do total — confira no PagBank', classe: 'pagamento-problema' };
+    case 'expirado':
+      return { texto: `Online: não pago, link expirou${cobrarNaEntrega}`, classe: 'pagamento-problema' };
+    default:
+      return linkVencido
+        ? { texto: `Online: não pago, link expirou${cobrarNaEntrega}`, classe: 'pagamento-problema' }
+        : { texto: 'Online: aguardando pagamento', classe: 'pagamento-aguardando' };
+  }
+}
+
 function formatarItemPedido(it) {
   const acrescimos = Array.isArray(it.acrescimos) && it.acrescimos.length > 0
     ? ` (+ ${it.acrescimos.map((a) => a.nome).join(', ')})`
@@ -55,13 +83,14 @@ async function carregarPedidos() {
       ? `${e.rua}, ${e.numero}${e.complemento ? ` (${e.complemento})` : ''} - ${e.bairro}`
       : '';
     const itensTexto = pedido.itens.map(formatarItemPedido).join(', ');
+    const pagamento = situacaoPagamento(pedido);
 
     linha.innerHTML = `
       <td><strong>${escaparHtml(pedido.id)}</strong><br><small>${new Date(pedido.criadoEm).toLocaleString('pt-br')}</small><br><small>${escaparHtml(itensTexto)}</small></td>
       <td>${escaparHtml(pedido.cliente.nome)}<br><small>${escaparHtml(pedido.cliente.telefone)}</small>${endereco ? `<br><small>${escaparHtml(endereco)}</small>` : ''}</td>
       <td>${pedido.tipoEntrega === 'entrega' ? 'Entrega' : 'Retirada'}</td>
       <td>${formatarMoeda(pedido.total)}</td>
-      <td>${pedido.formaPagamento === 'online' ? 'Online (PagSeguro)' : 'Na entrega/retirada'}</td>
+      <td class="${pagamento.classe}">${escaparHtml(pagamento.texto)}</td>
       <td>
         <select>
           ${Object.entries(STATUS_LABEL).map(([valor, rotulo]) => `<option value="${valor}" ${pedido.status === valor ? 'selected' : ''}>${rotulo}</option>`).join('')}

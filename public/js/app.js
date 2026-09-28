@@ -366,7 +366,7 @@ async function enviarPedido(evento) {
     }
 
     const textoPagamento = pedido.formaPagamento === 'online'
-      ? 'online (a loja entrará em contato para concluir o pagamento).'
+      ? 'online pelo PagSeguro. Se a página de pagamento não abriu, use o link "Acompanhar pedido" abaixo para pagar.'
       : 'na entrega/retirada.';
     document.getElementById('mensagem-confirmacao').innerHTML = `
       ✅ Pedido <strong>${escaparHtml(pedido.id)}</strong> recebido!<br>

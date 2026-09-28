@@ -72,9 +72,8 @@ function linkAcompanhamento(pedido) {
   return `/acompanhar.html?pedido=${encodeURIComponent(pedido.id)}&token=${encodeURIComponent(pedido.tokenAcompanhamento)}`;
 }
 
-// Envia a notificação do status atual do pedido. Nunca lança erro: falhas só vão para o log.
-async function notificarStatus(pedido) {
-  const mensagem = MENSAGENS_STATUS[pedido.status];
+// Envia uma notificação sobre o pedido. Nunca lança erro: falhas só vão para o log.
+async function enviar(pedido, mensagem) {
   if (!pedido.pushInscricao || !mensagem || !chavePublica) return false;
 
   const payload = JSON.stringify({
@@ -98,4 +97,14 @@ async function notificarStatus(pedido) {
   }
 }
 
-module.exports = { iniciar, getChavePublica, validarInscricao, notificarStatus, linkAcompanhamento, MENSAGENS_STATUS };
+// Notificação do status atual do pedido.
+function notificarStatus(pedido) {
+  return enviar(pedido, MENSAGENS_STATUS[pedido.status]);
+}
+
+// Notificação de pagamento online confirmado pelo PagBank.
+function notificarPagamento(pedido) {
+  return enviar(pedido, { titulo: 'Pagamento confirmado! 💳', texto: 'Recebemos o seu pagamento online.' });
+}
+
+module.exports = { iniciar, getChavePublica, validarInscricao, notificarStatus, notificarPagamento, linkAcompanhamento, MENSAGENS_STATUS };

@@ -18,14 +18,6 @@ services:
         sync: false
       - key: PAGSEGURO_SANDBOX
         value: "true"
-      # MongoDB Atlas (gratuito, igual ao wilboor.com.br). Tem prioridade sobre DATABASE_URL.
+      # MongoDB Atlas (gratuito, igual ao wilboor.com.br).
       - key: MONGODB_URI
         sync: false
-      - key: DATABASE_URL
-        fromDatabase:
-          name: tio-guerreiro-db
-          property: connectionString
-
-databases:
-  - name: tio-guerreiro-db
-    plan: free

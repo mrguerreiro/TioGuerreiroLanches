@@ -73,9 +73,19 @@ function formatarItemPedido(it) {
   return `${escaparHtml(`${it.quantidade}x ${it.nome}${acrescimos}`)}${observacao}`;
 }
 
+const INTERVALO_ATUALIZACAO_PEDIDOS = 20000;
+let pedidosCarregados = [];
+let intervaloPedidos = null;
+
 async function carregarPedidos() {
   const pedidos = await API.listarPedidos();
+  pedidosCarregados = pedidos;
+  imprimirPedidosNovos(pedidos);
+
+  // Não redesenha a tabela enquanto alguém está trocando o status de um pedido.
   const tbody = document.getElementById('tabela-pedidos');
+  if (tbody.contains(document.activeElement) && document.activeElement.tagName === 'SELECT') return;
+
   tbody.innerHTML = '';
 
   for (const pedido of pedidos) {
@@ -98,7 +108,10 @@ async function carregarPedidos() {
           ${Object.entries(STATUS_LABEL).map(([valor, rotulo]) => `<option value="${valor}" ${pedido.status === valor ? 'selected' : ''}>${rotulo}</option>`).join('')}
         </select>
       </td>
-      <td>${pedido.avisosAtivos ? '<span title="O cliente recebe avisos no celular a cada mudança de status">🔔</span>' : ''}</td>`;
+      <td>${pedido.avisosAtivos ? '<span title="O cliente recebe avisos no celular a cada mudança de status">🔔</span>' : ''}</td>
+      <td><button type="button" class="btn secundario btn-imprimir" title="Imprimir cupom">🖨 Imprimir</button></td>`;
+
+    linha.querySelector('.btn-imprimir').addEventListener('click', () => imprimirPedido(pedido));
 
     const select = linha.querySelector('select');
     select.dataset.statusAtual = pedido.status;
@@ -427,10 +440,16 @@ function configurarFormularios() {
 
   document.getElementById('btn-logout').addEventListener('click', comAvisoDeErro(async () => {
     await API.logout();
+    clearInterval(intervaloPedidos);
+    intervaloPedidos = null;
     mostrarPainel(false);
   }));
 
   document.getElementById('btn-atualizar-pedidos').addEventListener('click', comAvisoDeErro(carregarPedidos));
+
+  const campoImpressao = document.getElementById('campo-impressao-automatica');
+  campoImpressao.checked = impressaoAutomaticaAtiva();
+  campoImpressao.addEventListener('change', () => definirImpressaoAutomatica(campoImpressao.checked, pedidosCarregados));
   document.getElementById('btn-atualizar-clientes').addEventListener('click', comAvisoDeErro(carregarClientes));
 
   document.getElementById('form-novo-item').addEventListener('submit', async (evento) => {
@@ -485,6 +504,10 @@ function configurarFormularios() {
 async function iniciarPainel() {
   mostrarPainel(true);
   await Promise.all([carregarPedidos(), carregarCardapio(), carregarAcrescimos(), carregarClientes(), carregarConfiguracoes()]);
+  // Busca pedidos novos sozinho (e imprime, se a impressão automática estiver ligada neste computador).
+  if (!intervaloPedidos) {
+    intervaloPedidos = setInterval(() => carregarPedidos().catch((err) => console.error('Falha ao atualizar pedidos', err)), INTERVALO_ATUALIZACAO_PEDIDOS);
+  }
 }
 
 async function iniciar() {

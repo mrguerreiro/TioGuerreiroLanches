@@ -83,8 +83,13 @@
   <section id="aba-pedidos" class="aba ativa">
     <h2>Pedidos recebidos</h2>
     <button class="btn secundario" id="btn-atualizar-pedidos">Atualizar</button>
+    <label class="opcao-impressao">
+      <input type="checkbox" id="campo-impressao-automatica">
+      Imprimir pedidos novos automaticamente neste computador
+    </label>
+    <p class="texto-ajuda">A lista se atualiza sozinha a cada 20 segundos.</p>
     <table>
-      <thead><tr><th>Pedido</th><th>Cliente</th><th>Tipo</th><th>Total</th><th>Pagamento</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>Pedido</th><th>Cliente</th><th>Tipo</th><th>Total</th><th>Pagamento</th><th>Status</th><th></th><th></th></tr></thead>
       <tbody id="tabela-pedidos"></tbody>
     </table>
   </section>
@@ -167,6 +172,7 @@
 </div>
 
 <script src="js/api.js"></script>
+<script src="js/impressao.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>

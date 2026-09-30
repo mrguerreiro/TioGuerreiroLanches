@@ -281,6 +281,22 @@ button {
 
 .btn:hover { background: var(--vermelho-claro); }
 
+.opcao-impressao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-weight: 600;
+}
+
+.opcao-impressao input { width: auto; }
+
+.btn-imprimir {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 .btn.secundario {
   background: var(--branco);
   color: var(--vermelho);

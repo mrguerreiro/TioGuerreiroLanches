@@ -320,6 +320,13 @@ button {
   .modal { border-radius: 16px; }
 }
 
+/* Celular deitado: pouca altura, então o topo rola junto com a página e o logo diminui
+   (a barra de categorias continua fixa). */
+@media (orientation: landscape) and (max-height: 500px) {
+  header.topo { position: static; padding: 8px 16px; }
+  header.topo img.logo { width: 64px; height: 64px; }
+}
+
 .modal h2 {
   color: var(--vermelho);
   margin-top: 0;

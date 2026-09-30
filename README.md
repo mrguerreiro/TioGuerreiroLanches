@@ -146,3 +146,15 @@ Alternativas ao Render, com o mesmo princípio (Node.js + PostgreSQL + variávei
 - [Fly.io](https://fly.io/)
 - Uma VPS própria (com Node.js, PM2, PostgreSQL e um domínio configurado)
 
+## Domínio próprio (tioguerreirolanches.com.br)
+
+O site continua rodando no Render; o domínio registrado na HostGator só aponta para ele (a hospedagem
+compartilhada da HostGator não mantém um servidor Node.js ligado).
+
+1. No Render, em **Settings → Custom Domains**, adicione `tioguerreirolanches.com.br` e `www.tioguerreirolanches.com.br`.
+2. No cPanel da HostGator, em **Editor de Zona DNS**, aponte o registro **A** de `tioguerreirolanches.com.br` para o
+   IP informado pelo Render e troque o **CNAME** de `www` para `tio-guerreiro-lanches.onrender.com`.
+3. Quando o Render mostrar os dois domínios como verificados (com certificado HTTPS emitido), defina
+   `SITE_URL=https://tioguerreirolanches.com.br` em **Environment**. A partir daí quem abrir pelo endereço do Render
+   ou pelo `www` é redirecionado ao domínio oficial, e os links de retorno e aviso enviados ao PagBank passam a
+   usar o domínio.

@@ -32,6 +32,15 @@ if (!process.env.ADMIN_PASSWORD) {
 // Necessário atrás do proxy HTTPS do Render para o cookie "secure" funcionar.
 app.set('trust proxy', 1);
 
+// Com domínio próprio (SITE_URL), quem abrir pelo endereço do Render ou pelo "www" é levado ao endereço oficial,
+// para o carrinho, o login e os avisos no celular ficarem sempre no mesmo site. A API não é redirecionada.
+const hostOficial = process.env.SITE_URL ? new URL(process.env.SITE_URL).host : null;
+app.use((req, res, next) => {
+  if (!hostOficial || req.get('host') === hostOficial || req.path.startsWith('/api/')) return next();
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  res.redirect(301, `https://${hostOficial}${req.originalUrl}`);
+});
+
 app.use(cors());
 // Avisos do PagBank antes do express.json: a rota precisa do corpo bruto para conferir a assinatura.
 app.use('/api/pagamentos', pagamentosRoutes);

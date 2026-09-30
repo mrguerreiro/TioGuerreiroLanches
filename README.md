@@ -12,7 +12,7 @@ copy .env.example .env
 npm start
 ```
 
-Acesse `http://localhost:3000` para o site do cliente e `http://localhost:3000/admin` para o painel administrativo.
+Acesse `http://localhost:3000` para o site do cliente e `http://localhost:3000/tocadachefe` para o painel administrativo (não há link para ele no site).
 
 Login padrão do painel (definido em `.env`):
 - Usuário: `admin`

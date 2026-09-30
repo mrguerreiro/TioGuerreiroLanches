@@ -63,11 +63,15 @@ app.get('/api/notificacoes/chave-publica', (req, res) => {
   res.json({ chave: notificacoes.getChavePublica() });
 });
 
-app.use(express.static(path.join(__dirname, '..', 'public')));
-
-app.get('/admin', (req, res) => {
+// O painel administrativo só abre pelo endereço /tocadachefe (sem link no site); o arquivo direto fica oculto.
+app.get('/admin.html', (req, res) => res.sendStatus(404));
+app.get('/tocadachefe', (req, res) => {
+  // Com barra no final os caminhos relativos do painel (css/, js/) quebrariam.
+  if (req.path.endsWith('/')) return res.redirect(301, '/tocadachefe');
   res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
 });
+
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Erros das rotas da API sempre em JSON, no mesmo formato { erro } que o front-end espera.
 app.use((err, req, res, next) => {

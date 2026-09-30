@@ -31,7 +31,7 @@ self.addEventListener('fetch', (evento) => {
   const url = new URL(evento.request.url);
 
   // Nunca cachear chamadas de API nem o painel administrativo: sempre buscar versão atual.
-  if (url.pathname.includes('/api/') || url.pathname.includes('/admin') || url.pathname.includes('admin.js')) {
+  if (url.pathname.includes('/api/') || url.pathname.includes('/admin') || url.pathname.includes('/tocadachefe') || url.pathname.includes('admin.js')) {
     return;
   }
 

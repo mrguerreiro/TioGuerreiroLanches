@@ -12,9 +12,13 @@ const ehIphoneForaDoApp = /iphone|ipad|ipod/i.test(navigator.userAgent)
 const formatarMoeda = (valor) => valor.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
 
 function renderizarMenu() {
-  const grades = { lanche: document.getElementById('grade-lanches'), bebida: document.getElementById('grade-bebidas') };
-  grades.lanche.innerHTML = '';
-  grades.bebida.innerHTML = '';
+  const grades = {
+    lanche: document.getElementById('grade-lanches'),
+    batata: document.getElementById('grade-batatas'),
+    sobremesa: document.getElementById('grade-sobremesas'),
+    bebida: document.getElementById('grade-bebidas'),
+  };
+  for (const grade of Object.values(grades)) grade.innerHTML = '';
 
   for (const item of menu) {
     const grade = grades[item.categoria];
@@ -34,6 +38,10 @@ function renderizarMenu() {
         </div>
       </div>`;
     grade.appendChild(card);
+  }
+
+  for (const grade of Object.values(grades)) {
+    if (!grade.children.length) grade.innerHTML = '<p class="texto-ajuda">Em breve!</p>';
   }
 
   document.querySelectorAll('.card-produto button[data-id]').forEach((btn) => {
@@ -447,8 +455,7 @@ async function iniciar() {
   } catch (err) {
     console.error('Erro ao carregar cardápio', err);
     // Sem servidor Node disponível (ex.: prévia estática no GitHub Pages) não há cardápio dinâmico nem pedidos.
-    document.getElementById('grade-lanches').innerHTML = '';
-    document.getElementById('grade-bebidas').innerHTML = '';
+    document.querySelectorAll('.grade-produtos').forEach((grade) => { grade.innerHTML = ''; });
     const aviso = document.createElement('p');
     aviso.className = 'mensagem-erro';
     aviso.textContent = 'Esta é uma prévia estática do site. Para ver o cardápio, fazer pedidos e usar o painel administrativo, é necessário rodar o servidor Node.js (veja o README do projeto).';

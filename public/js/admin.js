@@ -138,9 +138,13 @@ async function carregarClientes() {
 
 async function carregarCardapio() {
   const menu = await API.getMenu();
-  const containers = { lanche: document.getElementById('lista-admin-lanches'), bebida: document.getElementById('lista-admin-bebidas') };
-  containers.lanche.innerHTML = '';
-  containers.bebida.innerHTML = '';
+  const containers = {
+    lanche: document.getElementById('lista-admin-lanches'),
+    batata: document.getElementById('lista-admin-batatas'),
+    sobremesa: document.getElementById('lista-admin-sobremesas'),
+    bebida: document.getElementById('lista-admin-bebidas'),
+  };
+  for (const container of Object.values(containers)) container.innerHTML = '';
 
   for (const item of menu) {
     const container = containers[item.categoria];
@@ -222,6 +226,8 @@ function montarItemCardapio(item) {
               <label>Categoria
                 <select name="categoria" required>
                   <option value="lanche" ${item.categoria === 'lanche' ? 'selected' : ''}>Lanche</option>
+                  <option value="batata" ${item.categoria === 'batata' ? 'selected' : ''}>Batatas crocantes</option>
+                  <option value="sobremesa" ${item.categoria === 'sobremesa' ? 'selected' : ''}>Sobremesa caseira</option>
                   <option value="bebida" ${item.categoria === 'bebida' ? 'selected' : ''}>Bebida</option>
                 </select>
               </label>

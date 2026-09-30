@@ -5,6 +5,7 @@ const { requireAdmin } = require('../middleware/auth');
 const { buildProductSvgDataUri } = require('../utils/productImage');
 const { gerarIdPorNome } = require('../utils/ids');
 
+const CATEGORIAS = ['lanche', 'batata', 'sobremesa', 'bebida'];
 const MIME_SUPORTADOS = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
 const TAMANHO_MAXIMO_IMAGEM = 5 * 1024 * 1024; // 5MB
 
@@ -25,7 +26,7 @@ router.post('/', requireAdmin, async (req, res, next) => {
     if (!nome || !categoria || preco === undefined || preco === null) {
       return res.status(400).json({ erro: 'Nome, categoria e preço são obrigatórios.' });
     }
-    if (!['lanche', 'bebida'].includes(categoria)) {
+    if (!CATEGORIAS.includes(categoria)) {
       return res.status(400).json({ erro: 'Categoria inválida.' });
     }
     const precoNum = Number(preco);
@@ -66,7 +67,7 @@ router.put('/:id', requireAdmin, async (req, res, next) => {
     }
     if (descricao !== undefined) campos.descricao = String(descricao).trim();
     if (categoria !== undefined) {
-      if (!['lanche', 'bebida'].includes(categoria)) {
+      if (!CATEGORIAS.includes(categoria)) {
         return res.status(400).json({ erro: 'Categoria inválida.' });
       }
       campos.categoria = categoria;

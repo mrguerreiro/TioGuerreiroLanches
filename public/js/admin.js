@@ -64,11 +64,13 @@ function situacaoPagamento(pedido) {
   }
 }
 
+// Devolve HTML já escapado: cada item do pedido, com a observação do cliente em destaque para a cozinha.
 function formatarItemPedido(it) {
   const acrescimos = Array.isArray(it.acrescimos) && it.acrescimos.length > 0
     ? ` (+ ${it.acrescimos.map((a) => a.nome).join(', ')})`
     : '';
-  return `${it.quantidade}x ${it.nome}${acrescimos}`;
+  const observacao = it.observacao ? ` <strong class="observacao-item">Obs.: ${escaparHtml(it.observacao)}</strong>` : '';
+  return `${escaparHtml(`${it.quantidade}x ${it.nome}${acrescimos}`)}${observacao}`;
 }
 
 async function carregarPedidos() {
@@ -82,11 +84,11 @@ async function carregarPedidos() {
     const endereco = e
       ? `${e.rua}, ${e.numero}${e.complemento ? ` (${e.complemento})` : ''} - ${e.bairro}`
       : '';
-    const itensTexto = pedido.itens.map(formatarItemPedido).join(', ');
+    const itensHtml = pedido.itens.map(formatarItemPedido).join('<br>');
     const pagamento = situacaoPagamento(pedido);
 
     linha.innerHTML = `
-      <td><strong>${escaparHtml(pedido.id)}</strong><br><small>${new Date(pedido.criadoEm).toLocaleString('pt-br')}</small><br><small>${escaparHtml(itensTexto)}</small></td>
+      <td><strong>${escaparHtml(pedido.id)}</strong><br><small>${new Date(pedido.criadoEm).toLocaleString('pt-br')}</small><br><small>${itensHtml}</small></td>
       <td>${escaparHtml(pedido.cliente.nome)}<br><small>${escaparHtml(pedido.cliente.telefone)}</small>${endereco ? `<br><small>${escaparHtml(endereco)}</small>` : ''}</td>
       <td>${pedido.tipoEntrega === 'entrega' ? 'Entrega' : 'Retirada'}</td>
       <td>${formatarMoeda(pedido.total)}</td>

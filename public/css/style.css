@@ -151,6 +151,32 @@ header.topo .titulo p.slogan {
   flex-shrink: 0;
 }
 
+.rotulo-observacao {
+  display: block;
+  margin: 0 0 4px;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.campo-observacao {
+  width: 100%;
+  padding: 9px 10px;
+  margin-bottom: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.campo-observacao::placeholder {
+  color: #aaa;
+}
+
+.observacao-item {
+  color: var(--vermelho);
+}
+
 .lista-selecao-acrescimos .nome-acrescimo {
   flex: 1;
 }

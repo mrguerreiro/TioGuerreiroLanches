@@ -53,7 +53,8 @@ function adicionarAoCarrinho(id) {
   const item = menu.find((m) => m.id === id);
   if (!item || item.pausado) return;
 
-  if (item.categoria === 'lanche' && acrescimosCatalogo.some((a) => !a.pausado)) {
+  // Lanches sempre abrem a janela de acréscimos/observação (ex.: "não quero cebola").
+  if (item.categoria === 'lanche') {
     abrirModalAcrescimos(item);
     return;
   }
@@ -61,14 +62,15 @@ function adicionarAoCarrinho(id) {
   incluirNoCarrinho(item, []);
 }
 
-function chaveCarrinho(item, acrescimos) {
+// Mesmo lanche com acréscimos ou observação diferentes vira uma linha separada no carrinho.
+function chaveCarrinho(item, acrescimos, observacao) {
   const idsAcrescimos = acrescimos.map((a) => a.id).sort().join(',');
-  return `${item.id}::${idsAcrescimos}`;
+  return `${item.id}::${idsAcrescimos}::${observacao.toLowerCase()}`;
 }
 
-function incluirNoCarrinho(item, acrescimos) {
-  const chave = chaveCarrinho(item, acrescimos);
-  if (!carrinho[chave]) carrinho[chave] = { item, quantidade: 0, acrescimos };
+function incluirNoCarrinho(item, acrescimos, observacao = '') {
+  const chave = chaveCarrinho(item, acrescimos, observacao);
+  if (!carrinho[chave]) carrinho[chave] = { item, quantidade: 0, acrescimos, observacao };
   carrinho[chave].quantidade += 1;
   atualizarBarraCarrinho();
 }
@@ -76,8 +78,13 @@ function incluirNoCarrinho(item, acrescimos) {
 function abrirModalAcrescimos(item) {
   itemPendenteAcrescimo = item;
   document.getElementById('nome-item-acrescimo').textContent = item.nome;
+  document.getElementById('observacao-item').value = '';
+
+  const temAcrescimos = acrescimosCatalogo.some((a) => !a.pausado);
+  document.getElementById('titulo-modal-acrescimos').textContent = temAcrescimos ? 'Deseja algum acréscimo?' : 'Personalize seu lanche';
 
   const lista = document.getElementById('lista-selecao-acrescimos');
+  lista.hidden = !temAcrescimos;
   lista.innerHTML = acrescimosCatalogo.map((a) => `
     <li>
       <label>
@@ -110,7 +117,8 @@ function confirmarAcrescimos() {
     return { id: catalogo.id, nome: catalogo.nome, preco: catalogo.preco };
   });
 
-  incluirNoCarrinho(itemPendenteAcrescimo, acrescimosEscolhidos);
+  const observacao = document.getElementById('observacao-item').value.trim();
+  incluirNoCarrinho(itemPendenteAcrescimo, acrescimosEscolhidos, observacao);
   itemPendenteAcrescimo = null;
   fecharModal('modal-acrescimos');
 }
@@ -153,14 +161,15 @@ function renderizarModalCarrinho() {
   }
 
   for (const [chave, entrada] of entradas) {
-    const { item, quantidade, acrescimos } = entrada;
+    const { item, quantidade, acrescimos, observacao } = entrada;
     const textoAcrescimos = acrescimos.length > 0
       ? `<br><small>+ ${escaparHtml(acrescimos.map((a) => a.nome).join(', '))}</small>`
       : '';
+    const textoObservacao = observacao ? `<br><small class="observacao-item">Obs.: ${escaparHtml(observacao)}</small>` : '';
     const linha = document.createElement('div');
     linha.className = 'linha-item-carrinho';
     linha.innerHTML = `
-      <span class="nome">${escaparHtml(item.nome)}<br><small>${formatarMoeda(precoUnitario(entrada))}</small>${textoAcrescimos}</span>
+      <span class="nome">${escaparHtml(item.nome)}<br><small>${formatarMoeda(precoUnitario(entrada))}</small>${textoAcrescimos}${textoObservacao}</span>
       <div class="qtd-controle">
         <button data-acao="menos">−</button>
         <span>${quantidade}</span>
@@ -358,10 +367,11 @@ async function enviarPedido(evento) {
     };
   }
 
-  const itens = Object.values(carrinho).map(({ item, quantidade, acrescimos }) => ({
+  const itens = Object.values(carrinho).map(({ item, quantidade, acrescimos, observacao }) => ({
     id: item.id,
     quantidade,
-    acrescimos: acrescimos.map((a) => a.id)
+    acrescimos: acrescimos.map((a) => a.id),
+    observacao
   }));
 
   botao.disabled = true;

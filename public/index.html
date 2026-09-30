@@ -84,9 +84,11 @@
 <!-- Modal de escolha de acréscimos -->
 <div class="modal-fundo oculta" id="modal-acrescimos">
   <div class="modal">
-    <h2>Deseja algum acréscimo?</h2>
+    <h2 id="titulo-modal-acrescimos">Deseja algum acréscimo?</h2>
     <p class="texto-ajuda" id="nome-item-acrescimo"></p>
     <ul class="lista-selecao-acrescimos" id="lista-selecao-acrescimos"></ul>
+    <label class="rotulo-observacao" for="observacao-item">Alguma observação?</label>
+    <textarea id="observacao-item" class="campo-observacao" rows="2" maxlength="140" placeholder="Ex.: não quero cebola"></textarea>
     <div class="total-final"><span>Total do item</span><span id="total-item-acrescimo">R$ 0,00</span></div>
     <button type="button" class="btn largura-total" id="btn-confirmar-acrescimos">Adicionar ao carrinho</button>
     <button type="button" class="btn secundario largura-total mt-8" id="btn-cancelar-acrescimos">Cancelar</button>

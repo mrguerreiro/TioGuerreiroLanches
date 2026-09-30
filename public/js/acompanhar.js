@@ -87,7 +87,8 @@ function renderizarPedido(pedido) {
   const itens = document.getElementById('itens-pedido');
   itens.innerHTML = pedido.itens.map((it) => {
     const acrescimos = it.acrescimos.length > 0 ? ` <small>(+ ${escaparHtml(it.acrescimos.join(', '))})</small>` : '';
-    return `${it.quantidade}x ${escaparHtml(it.nome)}${acrescimos}`;
+    const observacao = it.observacao ? `<br><small class="observacao-item">Obs.: ${escaparHtml(it.observacao)}</small>` : '';
+    return `${it.quantidade}x ${escaparHtml(it.nome)}${acrescimos}${observacao}`;
   }).join('<br>');
   document.getElementById('total-pedido').textContent = formatarMoeda(pedido.total);
   renderizarPagamento(pedido);

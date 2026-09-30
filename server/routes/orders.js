@@ -123,12 +123,18 @@ router.post('/', async (req, res) => {
         }
       }
 
+      // Observação livre do cliente (ex.: "não quero cebola"), só para lanches e com tamanho limitado.
+      const observacao = produto.categoria === 'lanche' && typeof it.observacao === 'string'
+        ? it.observacao.trim().slice(0, 140)
+        : '';
+
       const precoUnitario = produto.preco + acrescimosPedido.reduce((soma, a) => soma + a.preco, 0);
       itensPedido.push({
         id: produto.id,
         nome: produto.nome,
         preco: precoUnitario,
         acrescimos: acrescimosPedido,
+        observacao,
         quantidade
       });
     }
@@ -247,7 +253,8 @@ router.get('/:id/acompanhamento', async (req, res, next) => {
       itens: pedido.itens.map((it) => ({
         nome: it.nome,
         quantidade: it.quantidade,
-        acrescimos: (it.acrescimos || []).map((a) => a.nome)
+        acrescimos: (it.acrescimos || []).map((a) => a.nome),
+        observacao: it.observacao || ''
       }))
     });
   } catch (err) {

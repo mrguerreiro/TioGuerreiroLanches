@@ -58,6 +58,12 @@ header.topo .titulo p {
   color: var(--amarelo);
 }
 
+header.topo .titulo p.slogan {
+  color: var(--branco);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
 .aviso-ilustrativo {
   background: #fff3cd;
   color: #7a5b00;

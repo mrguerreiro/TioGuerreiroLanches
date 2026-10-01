@@ -36,6 +36,25 @@
       <div class="total-final"><span>Total</span><span id="total-pedido"></span></div>
       <p id="pagamento-pedido"></p>
       <a id="btn-pagar-agora" class="btn sem-decoracao" hidden>💳 Pagar agora</a>
+
+      <form id="form-pesquisa" class="pesquisa" hidden>
+        <h3>Como foi o seu pedido?</h3>
+        <p class="texto-ajuda">Dê uma nota de 0 a 10. Sua opinião nos ajuda a melhorar.</p>
+        <fieldset>
+          <legend>Qualidade dos alimentos recebidos</legend>
+          <div class="escala-nota" data-nome="notaAlimento"></div>
+        </fieldset>
+        <fieldset>
+          <legend id="pergunta-entrega">Qualidade da entrega</legend>
+          <div class="escala-nota" data-nome="notaEntrega"></div>
+        </fieldset>
+        <label class="rotulo-observacao" for="campo-comentario">Reclamação ou sugestão (opcional)</label>
+        <textarea id="campo-comentario" name="comentario" class="campo-observacao" rows="3" maxlength="500" placeholder="Conte o que podemos melhorar"></textarea>
+        <div id="erro-pesquisa"></div>
+        <button type="submit" class="btn largura-total" id="btn-enviar-pesquisa">Enviar avaliação</button>
+      </form>
+      <div id="pesquisa-enviada" class="mensagem-sucesso mt-10" hidden>Obrigado pela avaliação! ❤️</div>
+
       <p class="texto-ajuda">Esta página se atualiza sozinha a cada 30 segundos.</p>
     </div>
 

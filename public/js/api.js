@@ -36,6 +36,7 @@ const API = {
   criarPedido: (dados) => API._req('POST', '/api/pedidos', dados),
   listarPedidos: () => API._req('GET', '/api/pedidos'),
   acompanharPedido: (id, token) => API._req('GET', `/api/pedidos/${encodeURIComponent(id)}/acompanhamento?token=${encodeURIComponent(token)}`),
+  responderPesquisa: (id, dados) => API._req('POST', `/api/pedidos/${encodeURIComponent(id)}/pesquisa`, dados),
   getChavePush: () => API._req('GET', '/api/notificacoes/chave-publica'),
   atualizarStatusPedido: (id, status) => API._req('PUT', `/api/pedidos/${encodeURIComponent(id)}/status`, { status }),
 

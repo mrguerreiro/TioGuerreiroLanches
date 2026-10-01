@@ -438,6 +438,55 @@ form input, form select, form textarea {
   color: var(--branco);
 }
 
+.pesquisa {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #e5e0dc;
+}
+
+.pesquisa h3 { margin: 0 0 4px; color: var(--vermelho); }
+
+.pesquisa fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 14px;
+}
+
+.pesquisa legend {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.escala-nota {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.escala-nota label {
+  position: relative;
+  border: 2px solid var(--vermelho);
+  border-radius: 8px;
+  text-align: center;
+  padding: 8px 0;
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--vermelho);
+}
+
+.escala-nota input { position: absolute; opacity: 0; pointer-events: none; }
+
+.escala-nota label:has(input:checked) {
+  background: var(--vermelho);
+  color: var(--branco);
+}
+
+.escala-nota label:has(input:focus-visible) {
+  outline: 2px solid var(--laranja);
+  outline-offset: 2px;
+}
+
 .total-final {
   display: flex;
   justify-content: space-between;

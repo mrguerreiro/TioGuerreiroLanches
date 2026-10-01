@@ -76,6 +76,7 @@
     <button data-aba="aba-pedidos" class="ativa">Pedidos</button>
     <button data-aba="aba-cardapio">Cardápio</button>
     <button data-aba="aba-clientes">Clientes</button>
+    <button data-aba="aba-avaliacoes">Avaliações</button>
     <button data-aba="aba-config">Configurações</button>
     <button id="btn-logout" type="button" class="btn-sair">Sair</button>
   </div>
@@ -148,6 +149,16 @@
     <table>
       <thead><tr><th>Nome</th><th>Telefone</th><th>Endereço</th><th>Último pedido</th></tr></thead>
       <tbody id="tabela-clientes"></tbody>
+    </table>
+  </section>
+
+  <section id="aba-avaliacoes" class="aba">
+    <h2>Avaliações dos clientes</h2>
+    <p class="texto-ajuda">Respostas da pesquisa de satisfação enviada quando o pedido é marcado como Concluído. Atualiza junto com a lista de pedidos.</p>
+    <p id="resumo-avaliacoes"></p>
+    <table>
+      <thead><tr><th>Pedido</th><th>Cliente</th><th>Alimentos</th><th>Entrega / atendimento</th><th>Reclamação ou sugestão</th></tr></thead>
+      <tbody id="tabela-avaliacoes"></tbody>
     </table>
   </section>
 

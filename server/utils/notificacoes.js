@@ -8,7 +8,7 @@ const MENSAGENS_STATUS = {
   preparando: { titulo: 'Pedido sendo preparado 👨‍🍳', texto: 'Seu pedido está sendo preparado.' },
   saiu_para_entrega: { titulo: 'Pedido saiu para entrega 🛵', texto: 'Seu pedido está a caminho.' },
   pronto_retirada: { titulo: 'Pedido pronto para retirada 🏠', texto: 'Seu pedido já pode ser retirado na loja.' },
-  concluido: { titulo: 'Pedido concluído ❤️', texto: 'Obrigado pela preferência! Bom apetite.' },
+  concluido: { titulo: 'Pedido concluído ❤️', texto: 'Obrigado pela preferência! Toque aqui para avaliar seu pedido, leva menos de 1 minuto.' },
   cancelado: { titulo: 'Pedido cancelado', texto: 'Seu pedido foi cancelado. Em caso de dúvida, fale com a loja.' }
 };
 

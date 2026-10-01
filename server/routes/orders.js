@@ -245,6 +245,7 @@ router.get('/:id/acompanhamento', async (req, res, next) => {
       tipoEntrega: pedido.tipoEntrega,
       total: pedido.total,
       formaPagamento: pedido.formaPagamento,
+      pesquisaRespondida: !!pedido.pesquisa,
       pagamento: {
         status: pedido.pagamento ? pedido.pagamento.status : null,
         expiraEm: pedido.pagamento ? pedido.pagamento.expiraEm || null : null,
@@ -257,6 +258,43 @@ router.get('/:id/acompanhamento', async (req, res, next) => {
         observacao: it.observacao || ''
       }))
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+function notaValida(valor) {
+  return Number.isInteger(valor) && valor >= 0 && valor <= 10;
+}
+
+// Pesquisa de satisfação respondida pelo cliente na página de acompanhamento, depois do pedido concluído.
+// Exige o mesmo token do acompanhamento e só aceita uma resposta por pedido.
+router.post('/:id/pesquisa', async (req, res, next) => {
+  try {
+    const { token, notaAlimento, notaEntrega, comentario } = req.body || {};
+    const pedido = await db.getOrder(req.params.id);
+    if (!pedido || !tokenValido(token, pedido.tokenAcompanhamento)) {
+      return res.status(404).json({ erro: 'Pedido não encontrado.' });
+    }
+    if (pedido.status !== 'concluido') {
+      return res.status(400).json({ erro: 'A pesquisa fica disponível quando o pedido for concluído.' });
+    }
+    if (pedido.pesquisa) {
+      return res.status(409).json({ erro: 'Esta pesquisa já foi respondida. Obrigado!' });
+    }
+    if (!notaValida(notaAlimento) || !notaValida(notaEntrega)) {
+      return res.status(400).json({ erro: 'Escolha uma nota de 0 a 10 para cada pergunta.' });
+    }
+
+    await db.updateOrder(pedido.id, {
+      pesquisa: {
+        notaAlimento,
+        notaEntrega,
+        comentario: typeof comentario === 'string' ? comentario.trim().slice(0, 500) : '',
+        respondidaEm: new Date().toISOString()
+      }
+    });
+    res.status(201).json({ ok: true });
   } catch (err) {
     next(err);
   }

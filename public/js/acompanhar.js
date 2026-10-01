@@ -77,6 +77,55 @@ function renderizarPagamento(pedido) {
   if (linkSeguro) botao.href = linkSeguro;
 }
 
+// A pesquisa aparece quando o pedido é concluído e some depois de respondida.
+// O formulário é montado uma vez só, para a atualização a cada 30 s não apagar o que o cliente já marcou.
+function renderizarPesquisa(pedido) {
+  const form = document.getElementById('form-pesquisa');
+  const enviada = document.getElementById('pesquisa-enviada');
+  enviada.hidden = !pedido.pesquisaRespondida;
+  form.hidden = pedido.status !== 'concluido' || pedido.pesquisaRespondida;
+  document.getElementById('pergunta-entrega').textContent = pedido.tipoEntrega === 'entrega'
+    ? 'Qualidade da entrega'
+    : 'Qualidade do atendimento na retirada';
+}
+
+function montarEscalasDeNota() {
+  document.querySelectorAll('.escala-nota').forEach((escala) => {
+    const nome = escala.dataset.nome;
+    escala.innerHTML = Array.from({ length: 11 }, (_, nota) =>
+      `<label><input type="radio" name="${nome}" value="${nota}" required>${nota}</label>`).join('');
+  });
+}
+
+async function enviarPesquisa(evento) {
+  evento.preventDefault();
+  const form = evento.target;
+  const botao = document.getElementById('btn-enviar-pesquisa');
+  const erroBox = document.getElementById('erro-pesquisa');
+  erroBox.innerHTML = '';
+  botao.disabled = true;
+  try {
+    await API.responderPesquisa(idPedido, {
+      token,
+      notaAlimento: Number(form.notaAlimento.value),
+      notaEntrega: Number(form.notaEntrega.value),
+      comentario: form.comentario.value
+    });
+    renderizarPesquisa({ status: 'concluido', pesquisaRespondida: true });
+  } catch (err) {
+    if (err.message.startsWith('Esta pesquisa já foi respondida')) {
+      renderizarPesquisa({ status: 'concluido', pesquisaRespondida: true });
+      return;
+    }
+    const div = document.createElement('div');
+    div.className = 'mensagem-erro';
+    div.textContent = err.message;
+    erroBox.appendChild(div);
+  } finally {
+    botao.disabled = false;
+  }
+}
+
 function renderizarPedido(pedido) {
   document.getElementById('titulo-pedido').textContent = `Pedido ${pedido.id}`;
   document.getElementById('info-pedido').textContent =
@@ -92,6 +141,7 @@ function renderizarPedido(pedido) {
   }).join('<br>');
   document.getElementById('total-pedido').textContent = formatarMoeda(pedido.total);
   renderizarPagamento(pedido);
+  renderizarPesquisa(pedido);
 
   document.getElementById('carregando').hidden = true;
   document.getElementById('erro-acompanhamento').hidden = true;
@@ -115,6 +165,8 @@ async function iniciar() {
     mostrarErro('Link de acompanhamento incompleto.');
     return;
   }
+  montarEscalasDeNota();
+  document.getElementById('form-pesquisa').addEventListener('submit', enviarPesquisa);
   await atualizar();
   setInterval(() => {
     if (!document.hidden) atualizar();

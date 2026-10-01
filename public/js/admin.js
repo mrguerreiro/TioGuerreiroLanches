@@ -81,6 +81,7 @@ async function carregarPedidos() {
   const pedidos = await API.listarPedidos();
   pedidosCarregados = pedidos;
   imprimirPedidosNovos(pedidos);
+  renderizarAvaliacoes(pedidos);
 
   // Não redesenha a tabela enquanto alguém está trocando o status de um pedido.
   const tbody = document.getElementById('tabela-pedidos');
@@ -130,6 +131,35 @@ async function carregarPedidos() {
 
     tbody.appendChild(linha);
   }
+}
+
+// Pesquisas de satisfação respondidas, mais recentes primeiro (os pedidos já chegam nessa ordem).
+function renderizarAvaliacoes(pedidos) {
+  const avaliados = pedidos.filter((p) => p.pesquisa);
+  const tbody = document.getElementById('tabela-avaliacoes');
+  const resumo = document.getElementById('resumo-avaliacoes');
+
+  if (avaliados.length === 0) {
+    resumo.textContent = 'Nenhuma avaliação recebida ainda.';
+    tbody.innerHTML = '';
+    return;
+  }
+
+  const media = (campo) => (avaliados.reduce((soma, p) => soma + p.pesquisa[campo], 0) / avaliados.length)
+    .toLocaleString('pt-br', { maximumFractionDigits: 1 });
+  resumo.innerHTML = `<strong>${avaliados.length}</strong> avaliação(ões) · Média alimentos: <strong>${media('notaAlimento')}</strong> · Média entrega/atendimento: <strong>${media('notaEntrega')}</strong>`;
+
+  tbody.innerHTML = avaliados.map((p) => {
+    const { notaAlimento, notaEntrega, comentario, respondidaEm } = p.pesquisa;
+    const tipo = p.tipoEntrega === 'entrega' ? 'entrega' : 'retirada';
+    return `<tr>
+      <td><strong>${escaparHtml(p.id)}</strong><br><small>${new Date(respondidaEm).toLocaleString('pt-br')}</small></td>
+      <td>${escaparHtml(p.cliente.nome)}<br><small>${escaparHtml(p.cliente.telefone)}</small></td>
+      <td>${notaAlimento}</td>
+      <td>${notaEntrega} <small>(${tipo})</small></td>
+      <td>${comentario ? escaparHtml(comentario) : '—'}</td>
+    </tr>`;
+  }).join('');
 }
 
 async function carregarClientes() {

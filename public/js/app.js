@@ -5,9 +5,9 @@ let carrinho = {}; // { [chave]: { item, quantidade, acrescimos: [{id,nome,preco
 let itemPendenteAcrescimo = null;
 
 const suportaAvisos = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
-const ehIphoneForaDoApp = /iphone|ipad|ipod/i.test(navigator.userAgent)
-  && !navigator.standalone
-  && !window.matchMedia('(display-mode: standalone)').matches;
+const ehAppInstalado = navigator.standalone === true
+  || window.matchMedia('(display-mode: standalone)').matches;
+const ehIphoneForaDoApp = /iphone|ipad|ipod/i.test(navigator.userAgent) && !ehAppInstalado;
 
 const formatarMoeda = (valor) => valor.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
 
@@ -343,6 +343,33 @@ function mostrarLinkUltimoPedido() {
   paragrafo.hidden = false;
 }
 
+// No app instalado, lembra nome, telefone e endereço para preencher sozinho nas próximas compras.
+const CAMPOS_CLIENTE = ['nome', 'telefone', 'rua', 'numero', 'complemento', 'bairro', 'cidade'];
+
+function guardarDadosCliente(cliente) {
+  if (!ehAppInstalado) return;
+  try {
+    const anteriores = JSON.parse(localStorage.getItem('dadosCliente')) || {};
+    // Pedido de retirada não traz endereço: mantém o último endereço salvo.
+    const dados = { ...anteriores, nome: cliente.nome, telefone: cliente.telefone, ...(cliente.endereco || {}) };
+    localStorage.setItem('dadosCliente', JSON.stringify(dados));
+  } catch (err) { /* navegador sem armazenamento local: só não lembra os dados */ }
+}
+
+// Só preenche campos vazios, para não apagar o que o cliente já digitou nesta compra.
+function preencherDadosCliente() {
+  if (!ehAppInstalado) return;
+  let dados = null;
+  try {
+    dados = JSON.parse(localStorage.getItem('dadosCliente'));
+  } catch (err) { /* ignora */ }
+  if (!dados) return;
+  const form = document.getElementById('form-checkout');
+  for (const campo of CAMPOS_CLIENTE) {
+    if (!form[campo].value && dados[campo]) form[campo].value = dados[campo];
+  }
+}
+
 async function enviarPedido(evento) {
   evento.preventDefault();
   const erroBox = document.getElementById('erro-checkout');
@@ -383,6 +410,7 @@ async function enviarPedido(evento) {
     const inscricao = promessaInscricao ? await comLimiteDeTempo(promessaInscricao, 60000) : null;
     const pedido = await API.criarPedido({ itens, tipoEntrega, cliente, formaPagamento, notificacoes: inscricao || undefined });
     guardarUltimoPedido(pedido);
+    guardarDadosCliente(cliente);
     carrinho = {};
     atualizarBarraCarrinho();
     fecharModal('modal-checkout');
@@ -422,6 +450,7 @@ function configurarEventos() {
   document.getElementById('btn-ir-checkout').addEventListener('click', () => {
     if (quantidadeTotalCarrinho() === 0) return;
     aplicarOpcoesDaLoja();
+    preencherDadosCliente();
     fecharModal('modal-carrinho');
     abrirModal('modal-checkout');
   });

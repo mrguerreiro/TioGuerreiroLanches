@@ -32,6 +32,10 @@ if (!process.env.ADMIN_PASSWORD) {
 // Necessário atrás do proxy HTTPS do Render para o cookie "secure" funcionar.
 app.set('trust proxy', 1);
 
+// Chamada pelo robô externo (cron-job.org) no horário da loja, para o Render não colocar o site para dormir.
+// Fica antes do redirecionamento e da sessão: responde rápido, sem criar sessão nem redirecionar.
+app.get('/health', (req, res) => res.json({ ok: true }));
+
 // Com domínio próprio (SITE_URL), quem abrir pelo endereço do Render ou pelo "www" é levado ao endereço oficial,
 // para o carrinho, o login e os avisos no celular ficarem sempre no mesmo site. A API não é redirecionada.
 const hostOficial = process.env.SITE_URL ? new URL(process.env.SITE_URL).host : null;

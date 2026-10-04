@@ -18,6 +18,8 @@ function notificarEmSegundoPlano(pedido) {
   notificacoes.notificarStatus(pedido).catch((err) => console.error(err));
 }
 
+const QUANTIDADE_MAXIMA = 99;
+
 function tokenValido(recebido, esperado) {
   if (typeof recebido !== 'string' || typeof esperado !== 'string') return false;
   const a = Buffer.from(recebido);
@@ -106,7 +108,11 @@ router.post('/', async (req, res) => {
       if (produto.pausado) {
         return res.status(400).json({ erro: `Item indisponível no momento: ${produto.nome}` });
       }
-      const quantidade = Math.max(1, parseInt(it.quantidade, 10) || 1);
+      // Quantidade inválida é recusada, nunca corrigida em silêncio (o cliente receberia algo diferente do que pediu).
+      const quantidade = it.quantidade;
+      if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > QUANTIDADE_MAXIMA) {
+        return res.status(400).json({ erro: `Quantidade inválida para ${produto.nome}. Use um número inteiro de 1 a ${QUANTIDADE_MAXIMA}.` });
+      }
 
       // Os acréscimos e seus preços vêm sempre do catálogo do servidor, nunca do que o cliente enviar.
       const acrescimosPedido = [];
@@ -232,10 +238,11 @@ router.put('/:id/status', requireAdmin, async (req, res, next) => {
 
 // Consulta pública do andamento do pedido (usada pela página de acompanhamento).
 // Exige o token entregue ao cliente e devolve só o necessário, sem dados pessoais.
+// O token vem no cabeçalho X-Tracking-Token, e não na URL, para não ficar gravado em logs do servidor e da Cloudflare.
 router.get('/:id/acompanhamento', async (req, res, next) => {
   try {
     const pedido = await db.getOrder(req.params.id);
-    if (!pedido || !tokenValido(req.query.token, pedido.tokenAcompanhamento)) {
+    if (!pedido || !tokenValido(req.get('x-tracking-token'), pedido.tokenAcompanhamento)) {
       return res.status(404).json({ erro: 'Pedido não encontrado.' });
     }
     res.json({

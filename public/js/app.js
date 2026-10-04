@@ -318,8 +318,9 @@ function obterInscricaoAvisos() {
   })();
 }
 
+// O token vai depois do "#": essa parte nunca é enviada ao servidor, então não aparece em logs.
 function linkAcompanhamento(id, token) {
-  return `acompanhar.html?pedido=${encodeURIComponent(id)}&token=${encodeURIComponent(token)}`;
+  return `acompanhar.html?pedido=${encodeURIComponent(id)}#token=${encodeURIComponent(token)}`;
 }
 
 function guardarUltimoPedido(pedido) {

@@ -5,10 +5,10 @@ function escaparHtml(valor) {
 }
 
 const API = {
-  async _req(metodo, url, body) {
+  async _req(metodo, url, body, cabecalhosExtras) {
     const opts = {
       method: metodo,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...cabecalhosExtras },
       credentials: 'same-origin'
     };
     if (body !== undefined) opts.body = JSON.stringify(body);
@@ -35,7 +35,7 @@ const API = {
 
   criarPedido: (dados) => API._req('POST', '/api/pedidos', dados),
   listarPedidos: () => API._req('GET', '/api/pedidos'),
-  acompanharPedido: (id, token) => API._req('GET', `/api/pedidos/${encodeURIComponent(id)}/acompanhamento?token=${encodeURIComponent(token)}`),
+  acompanharPedido: (id, token) => API._req('GET', `/api/pedidos/${encodeURIComponent(id)}/acompanhamento`, undefined, { 'X-Tracking-Token': token }),
   responderPesquisa: (id, dados) => API._req('POST', `/api/pedidos/${encodeURIComponent(id)}/pesquisa`, dados),
   getChavePush: () => API._req('GET', '/api/notificacoes/chave-publica'),
   atualizarStatusPedido: (id, status) => API._req('PUT', `/api/pedidos/${encodeURIComponent(id)}/status`, { status }),

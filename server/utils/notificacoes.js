@@ -69,7 +69,8 @@ function validarInscricao(inscricao) {
 }
 
 function linkAcompanhamento(pedido) {
-  return `/acompanhar.html?pedido=${encodeURIComponent(pedido.id)}&token=${encodeURIComponent(pedido.tokenAcompanhamento)}`;
+  // Token depois do "#", para não ser enviado ao servidor nem aparecer em logs.
+  return `/acompanhar.html?pedido=${encodeURIComponent(pedido.id)}#token=${encodeURIComponent(pedido.tokenAcompanhamento)}`;
 }
 
 // Envia uma notificação sobre o pedido. Nunca lança erro: falhas só vão para o log.

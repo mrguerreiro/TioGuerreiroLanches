@@ -17,7 +17,13 @@ const ETAPAS = {
 
 const parametros = new URLSearchParams(window.location.search);
 const idPedido = parametros.get('pedido');
-const token = parametros.get('token');
+// O token fica depois do "#" (nunca vai ao servidor). Links antigos e o retorno do PagBank ainda trazem ?token=:
+// nesse caso o endereço é reescrito na hora, para o token sair do histórico do navegador.
+const token = new URLSearchParams(window.location.hash.slice(1)).get('token') || parametros.get('token');
+if (parametros.has('token') && token) {
+  parametros.delete('token');
+  history.replaceState(null, '', `${window.location.pathname}?${parametros}#token=${encodeURIComponent(token)}`);
+}
 
 function mostrarErro(mensagem) {
   document.getElementById('carregando').hidden = true;

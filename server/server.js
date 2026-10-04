@@ -2,7 +2,7 @@ require('dotenv').config();
 const crypto = require('crypto');
 const path = require('path');
 const express = require('express');
-const cors = require('cors');
+const helmet = require('helmet');
 const session = require('express-session');
 
 const db = require('./utils/db');
@@ -31,6 +31,32 @@ if (!process.env.ADMIN_PASSWORD) {
 
 // Necessário atrás do proxy HTTPS do Render para o cookie "secure" funcionar.
 app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
+// Cabeçalhos de segurança em todas as respostas (páginas, arquivos estáticos e API).
+// O "upgrade-insecure-requests" só vale no site publicado, para não quebrar o http://localhost.
+const emProducao = !!(process.env.RENDER || process.env.SITE_URL);
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      // O cupom de impressão do painel usa um bloco <style> dentro do iframe.
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      // Fotos do cardápio podem vir como data: (enviadas pelo painel) ou de um endereço https.
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'self'"],
+      upgradeInsecureRequests: emProducao ? [] : null
+    }
+  },
+  // Sem includeSubDomains: o mail. fica na HostGator e não deve ser afetado pelo HSTS deste site.
+  strictTransportSecurity: { maxAge: 31536000, includeSubDomains: false }
+}));
 
 // Chamada pelo robô externo (cron-job.org) no horário da loja, para o Render não colocar o site para dormir.
 // Fica antes do redirecionamento e da sessão: responde rápido, sem criar sessão nem redirecionar.
@@ -45,7 +71,6 @@ app.use((req, res, next) => {
   res.redirect(301, `https://${hostOficial}${req.originalUrl}`);
 });
 
-app.use(cors());
 // Avisos do PagBank antes do express.json: a rota precisa do corpo bruto para conferir a assinatura.
 app.use('/api/pagamentos', pagamentosRoutes);
 app.use(express.json({ limit: '8mb' }));

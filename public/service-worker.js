@@ -30,6 +30,11 @@ self.addEventListener('activate', (evento) => {
 self.addEventListener('fetch', (evento) => {
   const url = new URL(evento.request.url);
 
+  // O cache só aceita GET de http/https; requisições de extensões do navegador (chrome-extension://) ficam de fora.
+  if (evento.request.method !== 'GET' || !url.protocol.startsWith('http')) {
+    return;
+  }
+
   // Nunca cachear chamadas de API nem o painel administrativo: sempre buscar versão atual.
   if (url.pathname.includes('/api/') || url.pathname.includes('/admin') || url.pathname.includes('/tocadachefe') || url.pathname.includes('admin.js')) {
     return;

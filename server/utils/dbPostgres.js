@@ -4,6 +4,7 @@ const { Pool } = require('pg');
 const menuInicial = require('../data/menu.json');
 const settingsIniciais = require('../data/settings.json');
 const acrescimosIniciais = require('../data/acrescimos.json');
+const sachesIniciais = require('../data/saches.json');
 const { buildProductSvgDataUri } = require('./productImage');
 
 const pool = new Pool({
@@ -59,6 +60,15 @@ async function init() {
   await pool.query('ALTER TABLE acrescimos ADD COLUMN IF NOT EXISTS pausado BOOLEAN NOT NULL DEFAULT false');
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS saches (
+      id TEXT PRIMARY KEY,
+      nome TEXT NOT NULL,
+      pausado BOOLEAN NOT NULL DEFAULT false,
+      ordem INTEGER NOT NULL DEFAULT 0
+    );
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS chaves_sistema (
       id TEXT PRIMARY KEY,
       dados JSONB NOT NULL
@@ -86,6 +96,14 @@ async function init() {
     }
   }
 
+  const { rows: sachesRows } = await pool.query('SELECT COUNT(*)::int AS total FROM saches');
+  if (sachesRows[0].total === 0) {
+    let ordem = 0;
+    for (const s of sachesIniciais) {
+      await pool.query('INSERT INTO saches (id, nome, ordem) VALUES ($1,$2,$3)', [s.id, s.nome, ordem++]);
+    }
+  }
+
   const { rows: configRows } = await pool.query('SELECT COUNT(*)::int AS total FROM configuracoes');
   if (configRows[0].total === 0) {
     await pool.query('INSERT INTO configuracoes (id, dados) VALUES (1, $1)', [settingsIniciais]);
@@ -106,6 +124,10 @@ function linhaParaItem(row) {
 
 function linhaParaAcrescimo(row) {
   return { id: row.id, nome: row.nome, preco: Number(row.preco), pausado: row.pausado };
+}
+
+function linhaParaSache(row) {
+  return { id: row.id, nome: row.nome, pausado: row.pausado };
 }
 
 // Insere no fim da lista (ordem = maior ordem + 1).
@@ -178,6 +200,26 @@ async function updateAcrescimo(id, campos) {
 
 async function deleteAcrescimo(id) {
   const { rowCount } = await pool.query('DELETE FROM acrescimos WHERE id = $1', [id]);
+  return rowCount > 0;
+}
+
+async function getSaches() {
+  const { rows } = await pool.query('SELECT * FROM saches ORDER BY ordem ASC');
+  return rows.map(linhaParaSache);
+}
+
+async function addSache(sache) {
+  const row = await inserirComOrdem('saches', ['id', 'nome', 'pausado'], [sache.id, sache.nome, !!sache.pausado]);
+  return linhaParaSache(row);
+}
+
+async function updateSache(id, campos) {
+  const row = await atualizarColunas('saches', ['nome', 'pausado'], id, campos);
+  return row ? linhaParaSache(row) : null;
+}
+
+async function deleteSache(id) {
+  const { rowCount } = await pool.query('DELETE FROM saches WHERE id = $1', [id]);
   return rowCount > 0;
 }
 
@@ -256,6 +298,7 @@ module.exports = {
   init,
   getMenu, addMenuItem, updateMenuItem, deleteMenuItem,
   getAcrescimos, addAcrescimo, updateAcrescimo, deleteAcrescimo,
+  getSaches, addSache, updateSache, deleteSache,
   getOrders, getOrder, addOrder, updateOrder,
   getSettings, saveSettings,
   getChave, saveChave,

@@ -1,7 +1,8 @@
 let menu = [];
 let configuracoes = {};
 let acrescimosCatalogo = [];
-let carrinho = {}; // { [chave]: { item, quantidade, acrescimos: [{id,nome,preco}] } }
+let sachesCatalogo = []; // sachês gratuitos enviados junto com o lanche, cadastrados no painel
+let carrinho = {}; // { [chave]: { item, quantidade, acrescimos: [{id,nome,preco}], saches: [{id,nome}] } }
 let itemPendenteAcrescimo = null;
 
 const suportaAvisos = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -62,15 +63,16 @@ function adicionarAoCarrinho(id) {
   incluirNoCarrinho(item, []);
 }
 
-// Mesmo lanche com acréscimos ou observação diferentes vira uma linha separada no carrinho.
-function chaveCarrinho(item, acrescimos, observacao) {
+// Mesmo lanche com acréscimos, sachês ou observação diferentes vira uma linha separada no carrinho.
+function chaveCarrinho(item, acrescimos, observacao, saches) {
   const idsAcrescimos = acrescimos.map((a) => a.id).sort().join(',');
-  return `${item.id}::${idsAcrescimos}::${observacao.toLowerCase()}`;
+  const idsSaches = saches.map((s) => s.id).sort().join(',');
+  return `${item.id}::${idsAcrescimos}::${idsSaches}::${observacao.toLowerCase()}`;
 }
 
-function incluirNoCarrinho(item, acrescimos, observacao = '') {
-  const chave = chaveCarrinho(item, acrescimos, observacao);
-  if (!carrinho[chave]) carrinho[chave] = { item, quantidade: 0, acrescimos, observacao };
+function incluirNoCarrinho(item, acrescimos, observacao = '', saches = []) {
+  const chave = chaveCarrinho(item, acrescimos, observacao, saches);
+  if (!carrinho[chave]) carrinho[chave] = { item, quantidade: 0, acrescimos, observacao, saches };
   carrinho[chave].quantidade += 1;
   atualizarBarraCarrinho();
 }
@@ -98,6 +100,7 @@ function abrirModalAcrescimos(item) {
     cb.addEventListener('change', atualizarTotalModalAcrescimos);
   });
 
+  renderizarSaches(item);
   atualizarTotalModalAcrescimos();
   abrirModal('modal-acrescimos');
 }
@@ -109,6 +112,35 @@ function atualizarTotalModalAcrescimos() {
   document.getElementById('total-item-acrescimo').textContent = formatarMoeda(total);
 }
 
+function temSachesDisponiveis() {
+  return sachesCatalogo.some((s) => !s.pausado);
+}
+
+// Montada ao abrir os acréscimos, para as marcações sobreviverem ao "Voltar" entre as duas etapas.
+// Sem nenhum sachê disponível, a segunda etapa é pulada e o botão já adiciona ao carrinho.
+function renderizarSaches(item) {
+  document.getElementById('btn-continuar-acrescimos').textContent = temSachesDisponiveis() ? 'Continuar' : 'Adicionar ao carrinho';
+  document.getElementById('nome-item-saches').textContent = item.nome;
+  document.getElementById('lista-selecao-saches').innerHTML = sachesCatalogo.map((s) => `
+    <li>
+      <label>
+        <input type="checkbox" value="${escaparHtml(s.id)}" ${s.pausado ? 'disabled' : ''}>
+        <span class="nome-acrescimo">${escaparHtml(s.nome)}${s.pausado ? ' <small>(indisponível)</small>' : ''}</span>
+      </label>
+    </li>`).join('');
+}
+
+// Segunda etapa do lanche: escolha dos sachês. As escolhas da primeira etapa continuam na janela de acréscimos.
+function abrirModalSaches() {
+  if (!itemPendenteAcrescimo) return;
+  if (!temSachesDisponiveis()) {
+    confirmarAcrescimos();
+    return;
+  }
+  fecharModal('modal-acrescimos');
+  abrirModal('modal-saches');
+}
+
 function confirmarAcrescimos() {
   if (!itemPendenteAcrescimo) return;
   const marcados = document.querySelectorAll('#lista-selecao-acrescimos input:checked');
@@ -116,11 +148,16 @@ function confirmarAcrescimos() {
     const catalogo = acrescimosCatalogo.find((a) => a.id === cb.value);
     return { id: catalogo.id, nome: catalogo.nome, preco: catalogo.preco };
   });
+  const sachesMarcados = document.querySelectorAll('#lista-selecao-saches input:checked');
+  const sachesEscolhidos = sachesCatalogo
+    .filter((s) => Array.from(sachesMarcados).some((cb) => cb.value === s.id))
+    .map((s) => ({ id: s.id, nome: s.nome }));
 
   const observacao = document.getElementById('observacao-item').value.trim();
-  incluirNoCarrinho(itemPendenteAcrescimo, acrescimosEscolhidos, observacao);
+  incluirNoCarrinho(itemPendenteAcrescimo, acrescimosEscolhidos, observacao, sachesEscolhidos);
   itemPendenteAcrescimo = null;
   fecharModal('modal-acrescimos');
+  fecharModal('modal-saches');
 }
 
 function alterarQuantidade(chave, delta) {
@@ -161,15 +198,16 @@ function renderizarModalCarrinho() {
   }
 
   for (const [chave, entrada] of entradas) {
-    const { item, quantidade, acrescimos, observacao } = entrada;
+    const { item, quantidade, acrescimos, observacao, saches } = entrada;
     const textoAcrescimos = acrescimos.length > 0
       ? `<br><small>+ ${escaparHtml(acrescimos.map((a) => a.nome).join(', '))}</small>`
       : '';
+    const textoSaches = saches.length > 0 ? `<br><small>Sachês: ${escaparHtml(saches.map((s) => s.nome).join(', '))}</small>` : '';
     const textoObservacao = observacao ? `<br><small class="observacao-item">Obs.: ${escaparHtml(observacao)}</small>` : '';
     const linha = document.createElement('div');
     linha.className = 'linha-item-carrinho';
     linha.innerHTML = `
-      <span class="nome">${escaparHtml(item.nome)}<br><small>${formatarMoeda(precoUnitario(entrada))}</small>${textoAcrescimos}${textoObservacao}</span>
+      <span class="nome">${escaparHtml(item.nome)}<br><small>${formatarMoeda(precoUnitario(entrada))}</small>${textoAcrescimos}${textoSaches}${textoObservacao}</span>
       <div class="qtd-controle">
         <button data-acao="menos">−</button>
         <span>${quantidade}</span>
@@ -395,10 +433,11 @@ async function enviarPedido(evento) {
     };
   }
 
-  const itens = Object.values(carrinho).map(({ item, quantidade, acrescimos, observacao }) => ({
+  const itens = Object.values(carrinho).map(({ item, quantidade, acrescimos, observacao, saches }) => ({
     id: item.id,
     quantidade,
     acrescimos: acrescimos.map((a) => a.id),
+    saches: saches.map((s) => s.id),
     observacao
   }));
 
@@ -464,7 +503,12 @@ function configurarEventos() {
   document.querySelectorAll('input[name="formaPagamento"]').forEach((el) => el.addEventListener('change', atualizarBotaoConfirmar));
   document.getElementById('form-checkout').addEventListener('submit', enviarPedido);
 
+  document.getElementById('btn-continuar-acrescimos').addEventListener('click', abrirModalSaches);
   document.getElementById('btn-confirmar-acrescimos').addEventListener('click', confirmarAcrescimos);
+  document.getElementById('btn-voltar-acrescimos').addEventListener('click', () => {
+    fecharModal('modal-saches');
+    abrirModal('modal-acrescimos');
+  });
   document.getElementById('btn-cancelar-acrescimos').addEventListener('click', () => {
     itemPendenteAcrescimo = null;
     fecharModal('modal-acrescimos');
@@ -486,7 +530,9 @@ async function iniciar() {
   configurarBlocoAvisos();
   mostrarLinkUltimoPedido();
   try {
-    [menu, configuracoes, acrescimosCatalogo] = await Promise.all([API.getMenu(), API.getConfiguracoes(), API.getAcrescimos()]);
+    [menu, configuracoes, acrescimosCatalogo, sachesCatalogo] = await Promise.all([
+      API.getMenu(), API.getConfiguracoes(), API.getAcrescimos(), API.getSaches()
+    ]);
     renderizarMenu();
     aplicarOpcoesDaLoja();
     if (configuracoes.horarioFuncionamento) {

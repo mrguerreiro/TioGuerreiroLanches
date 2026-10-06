@@ -91,7 +91,9 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ erro: erroCliente });
     }
 
-    const [menu, settings, catalogoAcrescimos] = await Promise.all([db.getMenu(), db.getSettings(), db.getAcrescimos()]);
+    const [menu, settings, catalogoAcrescimos, catalogoSaches] = await Promise.all([
+      db.getMenu(), db.getSettings(), db.getAcrescimos(), db.getSaches()
+    ]);
 
     const erroOpcoes = validarOpcoesDaLoja(settings, tipoEntrega, formaPagamento);
     if (erroOpcoes) {
@@ -129,6 +131,21 @@ router.post('/', async (req, res) => {
         }
       }
 
+      // Sachês só para lanches, sempre pelo nome cadastrado no servidor e sem repetição.
+      const sachesPedido = [];
+      if (produto.categoria === 'lanche' && Array.isArray(it.saches)) {
+        for (const idSache of it.saches) {
+          const sache = catalogoSaches.find((s) => s.id === idSache);
+          if (!sache) {
+            return res.status(400).json({ erro: 'Um dos sachês escolhidos não está mais disponível. Remova o item do carrinho e adicione de novo.' });
+          }
+          if (sache.pausado) {
+            return res.status(400).json({ erro: `O sachê "${sache.nome}" está indisponível no momento. Remova o item do carrinho e adicione de novo.` });
+          }
+          if (!sachesPedido.includes(sache.nome)) sachesPedido.push(sache.nome);
+        }
+      }
+
       // Observação livre do cliente (ex.: "não quero cebola"), só para lanches e com tamanho limitado.
       const observacao = produto.categoria === 'lanche' && typeof it.observacao === 'string'
         ? it.observacao.trim().slice(0, 140)
@@ -140,6 +157,7 @@ router.post('/', async (req, res) => {
         nome: produto.nome,
         preco: precoUnitario,
         acrescimos: acrescimosPedido,
+        saches: sachesPedido,
         observacao,
         quantidade
       });
@@ -262,6 +280,7 @@ router.get('/:id/acompanhamento', async (req, res, next) => {
         nome: it.nome,
         quantidade: it.quantidade,
         acrescimos: (it.acrescimos || []).map((a) => a.nome),
+        saches: it.saches || [],
         observacao: it.observacao || ''
       }))
     });

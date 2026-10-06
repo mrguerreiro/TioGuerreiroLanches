@@ -27,6 +27,10 @@ const API = {
   criarAcrescimo: (dados) => API._req('POST', '/api/acrescimos', dados),
   atualizarAcrescimo: (id, dados) => API._req('PUT', `/api/acrescimos/${encodeURIComponent(id)}`, dados),
   excluirAcrescimo: (id) => API._req('DELETE', `/api/acrescimos/${encodeURIComponent(id)}`),
+  getSaches: () => API._req('GET', '/api/saches'),
+  criarSache: (dados) => API._req('POST', '/api/saches', dados),
+  atualizarSache: (id, dados) => API._req('PUT', `/api/saches/${encodeURIComponent(id)}`, dados),
+  excluirSache: (id) => API._req('DELETE', `/api/saches/${encodeURIComponent(id)}`),
 
   criarItem: (dados) => API._req('POST', '/api/menu', dados),
   atualizarItem: (id, dados) => API._req('PUT', `/api/menu/${encodeURIComponent(id)}`, dados),

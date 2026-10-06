@@ -10,6 +10,7 @@ const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const CLIENTES_FILE = path.join(DATA_DIR, 'clientes.json');
 const ACRESCIMOS_FILE = path.join(DATA_DIR, 'acrescimos.json');
+const SACHES_FILE = path.join(DATA_DIR, 'saches.json');
 const CHAVES_FILE = path.join(DATA_DIR, 'chaves.json');
 
 function readJson(file, valorPadrao) {
@@ -57,6 +58,11 @@ module.exports = {
   async addAcrescimo(acrescimo) { return adicionar(ACRESCIMOS_FILE, acrescimo); },
   async updateAcrescimo(id, campos) { return atualizar(ACRESCIMOS_FILE, id, campos); },
   async deleteAcrescimo(id) { return excluir(ACRESCIMOS_FILE, id); },
+
+  async getSaches() { return readJson(SACHES_FILE, []).map((s) => ({ ...s, pausado: !!s.pausado })); },
+  async addSache(sache) { return adicionar(SACHES_FILE, sache); },
+  async updateSache(id, campos) { return atualizar(SACHES_FILE, id, campos); },
+  async deleteSache(id) { return excluir(SACHES_FILE, id); },
 
   async getOrders() { return readJson(ORDERS_FILE, []); },
   async addOrder(pedido) { return adicionar(ORDERS_FILE, pedido); },

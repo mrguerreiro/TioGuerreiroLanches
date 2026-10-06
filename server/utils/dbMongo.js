@@ -4,6 +4,7 @@ const { MongoClient } = require('mongodb');
 const menuInicial = require('../data/menu.json');
 const settingsIniciais = require('../data/settings.json');
 const acrescimosIniciais = require('../data/acrescimos.json');
+const sachesIniciais = require('../data/saches.json');
 const { buildProductSvgDataUri } = require('./productImage');
 
 const client = new MongoClient(process.env.MONGODB_URI);
@@ -15,12 +16,14 @@ const pedidos = banco.collection('pedidos');
 const configuracoes = banco.collection('configuracoes');
 const clientes = banco.collection('clientes');
 const acrescimos = banco.collection('acrescimos');
+const saches = banco.collection('saches');
 const chavesSistema = banco.collection('chaves_sistema');
 
 async function init() {
   await client.connect();
   await itensCardapio.createIndex({ ordem: 1 });
   await acrescimos.createIndex({ ordem: 1 });
+  await saches.createIndex({ ordem: 1 });
   await pedidos.createIndex({ criadoEm: 1 });
   await clientes.createIndex({ atualizadoEm: -1 });
 
@@ -43,6 +46,12 @@ async function init() {
     })));
   }
 
+  if (await saches.countDocuments() === 0) {
+    await saches.insertMany(sachesIniciais.map((s, ordem) => ({
+      _id: s.id, nome: s.nome, pausado: false, ordem
+    })));
+  }
+
   await configuracoes.updateOne({ _id: 1 }, { $setOnInsert: { dados: settingsIniciais } }, { upsert: true });
 }
 
@@ -60,6 +69,10 @@ function docParaItem(doc) {
 
 function docParaAcrescimo(doc) {
   return { id: doc._id, nome: doc.nome, preco: Number(doc.preco), pausado: doc.pausado };
+}
+
+function docParaSache(doc) {
+  return { id: doc._id, nome: doc.nome, pausado: !!doc.pausado };
 }
 
 // Insere no fim da lista (ordem = maior ordem + 1).
@@ -127,6 +140,26 @@ async function updateAcrescimo(id, campos) {
 
 async function deleteAcrescimo(id) {
   const { deletedCount } = await acrescimos.deleteOne({ _id: id });
+  return deletedCount > 0;
+}
+
+async function getSaches() {
+  const docs = await saches.find().sort({ ordem: 1 }).toArray();
+  return docs.map(docParaSache);
+}
+
+async function addSache(sache) {
+  const doc = await inserirComOrdem(saches, { _id: sache.id, nome: sache.nome, pausado: !!sache.pausado });
+  return docParaSache(doc);
+}
+
+async function updateSache(id, campos) {
+  const doc = await atualizarCampos(saches, ['nome', 'pausado'], id, campos);
+  return doc ? docParaSache(doc) : null;
+}
+
+async function deleteSache(id) {
+  const { deletedCount } = await saches.deleteOne({ _id: id });
   return deletedCount > 0;
 }
 
@@ -201,6 +234,7 @@ module.exports = {
   init,
   getMenu, addMenuItem, updateMenuItem, deleteMenuItem,
   getAcrescimos, addAcrescimo, updateAcrescimo, deleteAcrescimo,
+  getSaches, addSache, updateSache, deleteSache,
   getOrders, getOrder, addOrder, updateOrder,
   getSettings, saveSettings,
   getChave, saveChave,

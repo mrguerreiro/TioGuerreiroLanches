@@ -69,8 +69,9 @@ function formatarItemPedido(it) {
   const acrescimos = Array.isArray(it.acrescimos) && it.acrescimos.length > 0
     ? ` (+ ${it.acrescimos.map((a) => a.nome).join(', ')})`
     : '';
+  const saches = Array.isArray(it.saches) && it.saches.length > 0 ? ` — Sachês: ${it.saches.join(', ')}` : '';
   const observacao = it.observacao ? ` <strong class="observacao-item">Obs.: ${escaparHtml(it.observacao)}</strong>` : '';
-  return `${escaparHtml(`${it.quantidade}x ${it.nome}${acrescimos}`)}${observacao}`;
+  return `${escaparHtml(`${it.quantidade}x ${it.nome}${acrescimos}${saches}`)}${observacao}`;
 }
 
 const INTERVALO_ATUALIZACAO_PEDIDOS = 20000;
@@ -422,6 +423,101 @@ function montarLinhaAcrescimo(acrescimo) {
   return linha;
 }
 
+async function carregarSaches() {
+  const saches = await API.getSaches();
+  const container = document.getElementById('lista-admin-saches');
+  container.innerHTML = '';
+
+  if (saches.length === 0) {
+    container.innerHTML = '<p class="texto-ajuda">Nenhum sachê cadastrado. Sem sachês, o cliente não vê essa etapa ao escolher o lanche.</p>';
+    return;
+  }
+
+  for (const sache of saches) {
+    container.appendChild(montarLinhaSache(sache));
+  }
+}
+
+// Igual à linha de acréscimo, mas sem preço (sachês são gratuitos).
+function montarLinhaSache(sache) {
+  const linha = document.createElement('form');
+  linha.className = 'linha-acrescimo-admin';
+
+  function mostrarVisualizacao() {
+    linha.innerHTML = `
+      <span class="info-item-admin">
+        <strong>${escaparHtml(sache.nome)}</strong>
+        ${sache.pausado ? '<span class="status-pausado"> (pausado)</span>' : ''}
+      </span>
+      <div class="acoes-item">
+        <button type="button" class="btn-editar">Editar</button>
+        <button type="button" class="btn-pausar">${sache.pausado ? 'Reativar' : 'Pausar'}</button>
+        <button type="button" class="btn-excluir">Excluir</button>
+      </div>`;
+
+    linha.querySelector('.btn-editar').addEventListener('click', () => {
+      mostrarErro('erro-sache', '');
+      mostrarEdicao();
+    });
+
+    const botaoPausar = linha.querySelector('.btn-pausar');
+    botaoPausar.addEventListener('click', async () => {
+      mostrarErro('erro-sache', '');
+      botaoPausar.disabled = true;
+      try {
+        await API.atualizarSache(sache.id, { pausado: !sache.pausado });
+        await carregarSaches();
+      } catch (err) {
+        botaoPausar.disabled = false;
+        mostrarErro('erro-sache', err.message);
+      }
+    });
+
+    linha.querySelector('.btn-excluir').addEventListener('click', async () => {
+      if (!confirm(`Excluir o sachê "${sache.nome}"?`)) return;
+      mostrarErro('erro-sache', '');
+      try {
+        await API.excluirSache(sache.id);
+        await carregarSaches();
+      } catch (err) {
+        mostrarErro('erro-sache', err.message);
+      }
+    });
+  }
+
+  function mostrarEdicao() {
+    linha.innerHTML = `
+      <input name="nome" value="${escaparHtml(sache.nome)}" required aria-label="Nome do sachê">
+      <div class="acoes-item">
+        <button type="submit" class="btn-salvar">Salvar</button>
+        <button type="button" class="btn-cancelar">Cancelar</button>
+      </div>`;
+
+    linha.querySelector('.btn-cancelar').addEventListener('click', () => {
+      mostrarErro('erro-sache', '');
+      mostrarVisualizacao();
+    });
+    linha.nome.focus();
+  }
+
+  linha.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    mostrarErro('erro-sache', '');
+    const botaoSalvar = linha.querySelector('.btn-salvar');
+    botaoSalvar.disabled = true;
+    try {
+      await API.atualizarSache(sache.id, { nome: linha.nome.value });
+      await carregarSaches();
+    } catch (err) {
+      botaoSalvar.disabled = false;
+      mostrarErro('erro-sache', err.message);
+    }
+  });
+
+  mostrarVisualizacao();
+  return linha;
+}
+
 function lerArquivoComoBase64(arquivo) {
   return new Promise((resolve, reject) => {
     const leitor = new FileReader();
@@ -514,6 +610,19 @@ function configurarFormularios() {
     }
   });
 
+  document.getElementById('form-novo-sache').addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    const form = evento.target;
+    mostrarErro('erro-sache', '');
+    try {
+      await API.criarSache({ nome: form.nome.value });
+      form.reset();
+      await carregarSaches();
+    } catch (err) {
+      mostrarErro('erro-sache', err.message);
+    }
+  });
+
   document.getElementById('form-config').addEventListener('submit', comAvisoDeErro(async (evento) => {
     evento.preventDefault();
     const form = evento.target;
@@ -533,7 +642,7 @@ function configurarFormularios() {
 
 async function iniciarPainel() {
   mostrarPainel(true);
-  await Promise.all([carregarPedidos(), carregarCardapio(), carregarAcrescimos(), carregarClientes(), carregarConfiguracoes()]);
+  await Promise.all([carregarPedidos(), carregarCardapio(), carregarAcrescimos(), carregarSaches(), carregarClientes(), carregarConfiguracoes()]);
   // Busca pedidos novos sozinho (e imprime, se a impressão automática estiver ligada neste computador).
   if (!intervaloPedidos) {
     intervaloPedidos = setInterval(() => carregarPedidos().catch((err) => console.error('Falha ao atualizar pedidos', err)), INTERVALO_ATUALIZACAO_PEDIDOS);

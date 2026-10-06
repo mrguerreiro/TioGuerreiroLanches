@@ -90,8 +90,20 @@
     <label class="rotulo-observacao" for="observacao-item">Alguma observação?</label>
     <textarea id="observacao-item" class="campo-observacao" rows="2" maxlength="140" placeholder="Ex.: não quero cebola"></textarea>
     <div class="total-final"><span>Total do item</span><span id="total-item-acrescimo">R$ 0,00</span></div>
-    <button type="button" class="btn largura-total" id="btn-confirmar-acrescimos">Adicionar ao carrinho</button>
+    <button type="button" class="btn largura-total" id="btn-continuar-acrescimos">Continuar</button>
     <button type="button" class="btn secundario largura-total mt-8" id="btn-cancelar-acrescimos">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal de escolha dos sachês (segunda etapa ao escolher um lanche) -->
+<div class="modal-fundo oculta" id="modal-saches">
+  <div class="modal">
+    <h2>Sachês</h2>
+    <p class="texto-ajuda" id="nome-item-saches"></p>
+    <p>Marque os sachês que deseja que sejam enviados junto com seu lanche:</p>
+    <ul class="lista-selecao-acrescimos" id="lista-selecao-saches"></ul>
+    <button type="button" class="btn largura-total" id="btn-confirmar-acrescimos">Adicionar ao carrinho</button>
+    <button type="button" class="btn secundario largura-total mt-8" id="btn-voltar-acrescimos">Voltar</button>
   </div>
 </div>
 

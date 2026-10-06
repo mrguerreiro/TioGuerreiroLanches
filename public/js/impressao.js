@@ -40,11 +40,12 @@ function montarCupom(pedido) {
 
   const itens = pedido.itens.map((it) => {
     const acrescimos = (it.acrescimos || []).map((a) => `<div class="sub">+ ${escaparHtml(a.nome)}</div>`).join('');
+    const saches = (it.saches || []).length > 0 ? `<div class="sub">Sachês: ${escaparHtml(it.saches.join(', '))}</div>` : '';
     const observacao = it.observacao ? `<div class="obs">OBS: ${escaparHtml(it.observacao)}</div>` : '';
     return `
       <div class="item">
         <div class="linha"><span class="nome">${it.quantidade}x ${escaparHtml(it.nome)}</span><span>${formatarMoeda(it.preco * it.quantidade)}</span></div>
-        ${acrescimos}${observacao}
+        ${acrescimos}${saches}${observacao}
       </div>`;
   }).join('');
 

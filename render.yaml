@@ -25,3 +25,6 @@ services:
       # MongoDB Atlas (gratuito, igual ao wilboor.com.br).
       - key: MONGODB_URI
         sync: false
+      # Taxa de entrega por distância (OpenRouteService). Sem ela, vale a taxa fixa do painel.
+      - key: ORS_API_KEY
+        sync: false

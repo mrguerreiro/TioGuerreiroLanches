@@ -1,14 +1,10 @@
 const crypto = require('crypto');
 const express = require('express');
-const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
+const { rateLimit } = require('express-rate-limit');
+const { ipDoVisitante } = require('../utils/ip');
 const router = express.Router();
 
 const MENSAGEM_LIMITE = { erro: 'Muitas tentativas de login. Aguarde 15 minutos e tente de novo.' };
-
-// Atrás da Cloudflare o IP real do visitante vem no CF-Connecting-IP (o req.ip seria o da Cloudflare).
-function ipDoVisitante(req) {
-  return ipKeyGenerator(req.get('cf-connecting-ip') || req.ip);
-}
 
 // Até 10 senhas erradas a cada 15 minutos por IP. Logins certos não contam.
 const limitePorIp = rateLimit({

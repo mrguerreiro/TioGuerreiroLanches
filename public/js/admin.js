@@ -102,7 +102,7 @@ async function carregarPedidos() {
     linha.innerHTML = `
       <td><strong>${escaparHtml(pedido.id)}</strong><br><small>${new Date(pedido.criadoEm).toLocaleString('pt-br')}</small><br><small>${itensHtml}</small></td>
       <td>${escaparHtml(pedido.cliente.nome)}<br><small>${escaparHtml(pedido.cliente.telefone)}</small>${endereco ? `<br><small>${escaparHtml(endereco)}</small>` : ''}</td>
-      <td>${pedido.tipoEntrega === 'entrega' ? 'Entrega' : 'Retirada'}</td>
+      <td>${pedido.tipoEntrega === 'entrega' ? 'Entrega' : 'Retirada'}${typeof pedido.distanciaKm === 'number' ? `<br><small>${pedido.distanciaKm.toLocaleString('pt-br')} km</small>` : ''}</td>
       <td>${formatarMoeda(pedido.total)}</td>
       <td class="${pagamento.classe}">${escaparHtml(pagamento.texto)}</td>
       <td>
@@ -527,6 +527,27 @@ function lerArquivoComoBase64(arquivo) {
   });
 }
 
+// Uma faixa da tabela de entrega: "até X km cobra R$ Y". As linhas são lidas de volta ao salvar.
+function montarLinhaFaixa(faixa = { ate: '', taxa: '' }) {
+  const linha = document.createElement('div');
+  linha.className = 'linha-faixa-entrega';
+  linha.innerHTML = `
+    <span>Até</span>
+    <input type="number" step="0.01" min="0.01" name="faixaAte" value="${escaparHtml(faixa.ate)}" required aria-label="Distância máxima da faixa (km)">
+    <span>km: R$</span>
+    <input type="number" step="0.01" min="0" name="faixaTaxa" value="${escaparHtml(faixa.taxa)}" required aria-label="Taxa da faixa (R$)">
+    <button type="button" class="btn-excluir">Remover</button>`;
+  linha.querySelector('.btn-excluir').addEventListener('click', () => linha.remove());
+  return linha;
+}
+
+function lerFaixas() {
+  return Array.from(document.querySelectorAll('#faixas-entrega .linha-faixa-entrega')).map((linha) => ({
+    ate: linha.querySelector('[name="faixaAte"]').value,
+    taxa: linha.querySelector('[name="faixaTaxa"]').value
+  }));
+}
+
 async function carregarConfiguracoes() {
   const config = await API.getConfiguracoes();
   const form = document.getElementById('form-config');
@@ -534,6 +555,13 @@ async function carregarConfiguracoes() {
   form.horarioFuncionamento.value = config.horarioFuncionamento || '';
   form.whatsapp.value = config.whatsapp || '';
   form.taxaEntrega.value = config.taxaEntrega || 0;
+  form.coordenadasCozinha.value = config.coordenadasCozinha || '';
+  document.getElementById('status-calculo-distancia').textContent = config.calculoPorDistancia
+    ? '✅ Cálculo por distância ligado (OpenRouteService configurado).'
+    : '⚠️ Cálculo por distância desligado: falta a chave ORS_API_KEY no Render. Enquanto isso, vale a taxa fixa abaixo.';
+  const faixas = document.getElementById('faixas-entrega');
+  faixas.innerHTML = '';
+  (config.faixasEntrega || []).forEach((f) => faixas.appendChild(montarLinhaFaixa(f)));
   form.aceitaRetirada.checked = !!config.aceitaRetirada;
   form.aceitaEntrega.checked = !!config.aceitaEntrega;
   form.aceitaPagamentoEntrega.checked = !!config.aceitaPagamentoEntrega;
@@ -631,13 +659,23 @@ function configurarFormularios() {
       horarioFuncionamento: form.horarioFuncionamento.value,
       whatsapp: form.whatsapp.value,
       taxaEntrega: form.taxaEntrega.value,
+      coordenadasCozinha: form.coordenadasCozinha.value,
+      faixasEntrega: lerFaixas(),
       aceitaRetirada: form.aceitaRetirada.checked,
       aceitaEntrega: form.aceitaEntrega.checked,
       aceitaPagamentoEntrega: form.aceitaPagamentoEntrega.checked,
       aceitaPagamentoOnline: form.aceitaPagamentoOnline.checked
     });
+    // Recarrega para mostrar as faixas já em ordem de distância.
+    await carregarConfiguracoes();
     alert('Configurações salvas.');
   }));
+
+  document.getElementById('btn-adicionar-faixa').addEventListener('click', () => {
+    const linha = montarLinhaFaixa();
+    document.getElementById('faixas-entrega').appendChild(linha);
+    linha.querySelector('[name="faixaAte"]').focus();
+  });
 }
 
 async function iniciarPainel() {

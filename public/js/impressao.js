@@ -82,7 +82,7 @@ function montarCupom(pedido) {
   ${itens}
   <hr>
   <div class="linha"><span>Subtotal</span><span>${formatarMoeda(subtotal)}</span></div>
-  ${pedido.taxaEntrega ? `<div class="linha"><span>Entrega</span><span>${formatarMoeda(pedido.taxaEntrega)}</span></div>` : ''}
+  ${pedido.taxaEntrega ? `<div class="linha"><span>Entrega${typeof pedido.distanciaKm === 'number' ? ` (${pedido.distanciaKm.toLocaleString('pt-br')} km)` : ''}</span><span>${formatarMoeda(pedido.taxaEntrega)}</span></div>` : ''}
   <div class="linha total"><span>TOTAL</span><span>${formatarMoeda(pedido.total)}</span></div>
   <div class="pagamento">${escaparHtml(textoPagamentoCupom(pedido))}</div>
 </body></html>`;

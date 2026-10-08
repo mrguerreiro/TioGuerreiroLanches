@@ -42,6 +42,8 @@
   .linha-acrescimo-admin { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; flex-wrap: wrap; }
   .linha-acrescimo-admin input[name="nome"] { flex: 2 1 160px; width: auto; }
   .linha-acrescimo-admin input[name="preco"] { flex: 1 1 90px; width: auto; }
+  .linha-faixa-entrega { display: flex; gap: 8px; align-items: center; padding: 4px 0; flex-wrap: wrap; }
+  .linha-faixa-entrega input { flex: 0 1 90px; width: auto; margin: 0; }
   .btn-salvar { background: #2e7d32; }
   .btn-cancelar { background: #777; }
   .form-editar-item .linha-item-admin { align-items: flex-start; }
@@ -184,7 +186,15 @@
       <input name="horarioFuncionamento">
       <label>WhatsApp (com DDI+DDD, só números)</label>
       <input name="whatsapp">
-      <label>Taxa de entrega (R$)</label>
+      <h3 class="mt-10">Taxa de entrega por distância</h3>
+      <p class="texto-ajuda" id="status-calculo-distancia"></p>
+      <label>Localização da cozinha (latitude, longitude)</label>
+      <input name="coordenadasCozinha" placeholder="-22.2931, -49.0475">
+      <p class="texto-ajuda">Ponto de partida das entregas. Para pegar o ponto exato: no Google Maps, clique com o botão direito em cima da cozinha e clique nos números que aparecem no topo do menu (eles são copiados); cole aqui.</p>
+      <p class="texto-ajuda">Cada faixa vale da distância da faixa anterior até o limite informado. Endereços acima da última faixa ficam fora da área de entrega.</p>
+      <div id="faixas-entrega"></div>
+      <button type="button" class="btn secundario mt-8" id="btn-adicionar-faixa">Adicionar faixa</button>
+      <label class="mt-10">Taxa fixa de entrega (R$), usada só enquanto o cálculo por distância estiver desligado</label>
       <input name="taxaEntrega" type="number" step="0.01" min="0">
       <label><input type="checkbox" name="aceitaRetirada" class="checkbox-inline"> Aceitar retirada</label>
       <label><input type="checkbox" name="aceitaEntrega" class="checkbox-inline"> Aceitar entrega</label>

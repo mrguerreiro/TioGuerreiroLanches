@@ -37,6 +37,7 @@ const API = {
   atualizarImagemItem: (id, imagemBase64) => API._req('PUT', `/api/menu/${encodeURIComponent(id)}/imagem`, { imagemBase64 }),
   excluirItem: (id) => API._req('DELETE', `/api/menu/${encodeURIComponent(id)}`),
 
+  cotarEntrega: (endereco) => API._req('POST', '/api/entrega/taxa', { endereco }),
   criarPedido: (dados) => API._req('POST', '/api/pedidos', dados),
   listarPedidos: () => API._req('GET', '/api/pedidos'),
   acompanharPedido: (id, token) => API._req('GET', `/api/pedidos/${encodeURIComponent(id)}/acompanhamento`, undefined, { 'X-Tracking-Token': token }),

@@ -70,9 +70,21 @@ No painel é possível:
 - Pausar/reativar um item (fica visível mas indisponível para pedido).
 - Cadastrar, editar (nome e preço), pausar/reativar e excluir **acréscimos** (eles aparecem só na janela que abre ao escolher um
   lanche; um acréscimo pausado aparece como indisponível e não pode ser escolhido).
+- Cadastrar, renomear, pausar/reativar e excluir **sachês** (gratuitos), escolhidos pelo cliente depois dos acréscimos.
 - Excluir um item definitivamente.
-- Alterar taxa de entrega, horário de funcionamento, WhatsApp e formas de entrega/pagamento aceitas. As opções
-  desativadas somem do checkout e também são recusadas pelo servidor.
+- Alterar a tabela de taxa de entrega por distância, localização da cozinha, horário de funcionamento, WhatsApp e
+  formas de entrega/pagamento aceitas. As opções desativadas somem do checkout e também são recusadas pelo servidor.
+
+## Taxa de entrega por distância
+
+Com `ORS_API_KEY` configurada, ao digitar o endereço no checkout o servidor localiza o endereço e calcula a
+distância de carro a partir da localização da cozinha pelo [OpenRouteService](https://openrouteservice.org/)
+(mapas do OpenStreetMap, plano grátis sem cartão), e aplica a tabela de faixas das Configurações. Endereço não
+encontrado no nível de rua ou acima da última faixa não pode pedir entrega. O valor é sempre recalculado no
+servidor ao criar o pedido. Sem a chave, vale a taxa fixa das Configurações.
+
+A cozinha é cadastrada por latitude e longitude (não pelo endereço), porque a numeração quadra-lote de Bauru
+quase nunca existe no OpenStreetMap. Endereços de clientes sem número no mapa são medidos a partir do meio da rua.
 
 ## Avisos de andamento do pedido (notificações no celular)
 

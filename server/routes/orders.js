@@ -6,6 +6,7 @@ const { requireAdmin } = require('../middleware/auth');
 const { criarCheckoutPagSeguro } = require('../utils/pagseguro');
 const { gerarIdPedido } = require('../utils/ids');
 const notificacoes = require('../utils/notificacoes');
+const { ErroEntrega, calculoPorDistanciaAtivo, cotarEntrega } = require('../utils/entrega');
 
 // Remove dados internos antes de devolver o pedido (a inscrição de push vira só um indicador).
 function pedidoSemDadosInternos(pedido) {
@@ -163,9 +164,27 @@ router.post('/', async (req, res) => {
       });
     }
 
-    const subtotal = itensPedido.reduce((soma, it) => soma + it.preco * it.quantidade, 0);
-    const taxaEntrega = tipoEntrega === 'entrega' ? Number(settings.taxaEntrega || 0) : 0;
-    const total = subtotal + taxaEntrega;
+    // Arredonda em centavos para não gravar sobras de ponto flutuante (ex.: 18.490000000000002).
+    const emCentavos = (valor) => Math.round(valor * 100) / 100;
+    const subtotal = emCentavos(itensPedido.reduce((soma, it) => soma + it.preco * it.quantidade, 0));
+    // Taxa sempre calculada aqui (nunca a que o navegador mostrou): pela distância quando o OpenRouteService
+    // está configurado; senão, a taxa fixa das Configurações. Endereço não encontrado ou fora da área bloqueia o pedido.
+    let taxaEntrega = 0;
+    let distanciaKm = null;
+    if (tipoEntrega === 'entrega') {
+      if (calculoPorDistanciaAtivo()) {
+        try {
+          ({ taxa: taxaEntrega, distanciaKm } = await cotarEntrega(settings, cliente.endereco));
+        } catch (err) {
+          if (err instanceof ErroEntrega) return res.status(400).json({ erro: err.message });
+          console.error('Falha ao calcular a taxa de entrega:', err);
+          return res.status(502).json({ erro: 'Não foi possível calcular a taxa de entrega agora. Tente novamente em instantes ou escolha retirar na loja.' });
+        }
+      } else {
+        taxaEntrega = Number(settings.taxaEntrega || 0);
+      }
+    }
+    const total = emCentavos(subtotal + taxaEntrega);
 
     const pedido = {
       id: gerarIdPedido(),
@@ -180,6 +199,7 @@ router.post('/', async (req, res) => {
       itens: itensPedido,
       subtotal,
       taxaEntrega,
+      distanciaKm,
       total,
       formaPagamento,
       pagamento: { status: formaPagamento === 'entrega_local' ? 'pendente_na_entrega' : 'pendente' },

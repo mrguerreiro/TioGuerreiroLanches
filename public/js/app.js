@@ -229,17 +229,113 @@ function tipoEntregaSelecionado() {
   return marcado ? marcado.value : null;
 }
 
+// Taxa por distância: o servidor localiza o endereço e devolve { distanciaKm, taxa } ou um erro para mostrar.
+// A cotação vale só para o endereço exato em que foi feita (chave); mudou o endereço, calcula de novo.
+let cotacaoEntrega = null; // { chave, distanciaKm, taxa } ou { chave, erro }
+let chaveEmCalculo = null;
+let sequenciaCotacao = 0;
+let temporizadorCotacao = null;
+
+function enderecoDoFormulario() {
+  const form = document.getElementById('form-checkout');
+  return {
+    rua: form.rua.value.trim(),
+    numero: form.numero.value.trim(),
+    bairro: form.bairro.value.trim(),
+    cidade: form.cidade.value.trim()
+  };
+}
+
+function chaveEndereco(e) {
+  return [e.rua, e.numero, e.bairro, e.cidade].join('|').toLowerCase();
+}
+
+function cotacaoAtual() {
+  const chave = chaveEndereco(enderecoDoFormulario());
+  return cotacaoEntrega && cotacaoEntrega.chave === chave ? cotacaoEntrega : null;
+}
+
+function usaCalculoPorDistancia() {
+  return tipoEntregaSelecionado() === 'entrega' && !!configuracoes.calculoPorDistancia;
+}
+
+// null = entrega ainda sem taxa calculada para o endereço digitado.
 function taxaEntregaAtual() {
-  return tipoEntregaSelecionado() === 'entrega' ? Number(configuracoes.taxaEntrega || 0) : 0;
+  if (tipoEntregaSelecionado() !== 'entrega') return 0;
+  if (!configuracoes.calculoPorDistancia) return Number(configuracoes.taxaEntrega || 0);
+  const cotacao = cotacaoAtual();
+  return cotacao && !cotacao.erro ? cotacao.taxa : null;
+}
+
+function renderizarInfoEntrega() {
+  const caixa = document.getElementById('info-entrega');
+  caixa.className = '';
+  caixa.textContent = '';
+  if (!usaCalculoPorDistancia()) return;
+
+  const cotacao = cotacaoAtual();
+  if (cotacao && cotacao.erro) {
+    caixa.className = 'mensagem-erro';
+    caixa.textContent = cotacao.erro;
+  } else if (cotacao) {
+    caixa.className = 'texto-ajuda';
+    caixa.textContent = `Distância até a loja: ${cotacao.distanciaKm.toLocaleString('pt-BR')} km`;
+  } else {
+    caixa.className = 'texto-ajuda';
+    caixa.textContent = chaveEmCalculo === chaveEndereco(enderecoDoFormulario())
+      ? 'Calculando a taxa de entrega...'
+      : 'Preencha o endereço completo para calcular a taxa de entrega.';
+  }
 }
 
 function atualizarTotalCheckout() {
   const subtotal = totalCarrinho();
   const taxa = taxaEntregaAtual();
+  let textoTaxa = 'Grátis';
+  if (taxa === null) textoTaxa = 'Informe o endereço';
+  else if (taxa > 0) textoTaxa = formatarMoeda(taxa);
   document.getElementById('subtotal-checkout').textContent = formatarMoeda(subtotal);
-  document.getElementById('taxa-checkout').textContent = taxa > 0 ? formatarMoeda(taxa) : 'Grátis';
+  document.getElementById('taxa-checkout').textContent = textoTaxa;
   document.getElementById('linha-taxa-entrega').hidden = tipoEntregaSelecionado() !== 'entrega';
-  document.getElementById('total-checkout').textContent = formatarMoeda(subtotal + taxa);
+  document.getElementById('total-checkout').textContent = formatarMoeda(subtotal + (taxa || 0));
+  renderizarInfoEntrega();
+}
+
+// Calcula a taxa do endereço digitado (ou reaproveita a última cotação dele). Respostas atrasadas de um
+// endereço antigo são ignoradas.
+async function cotarEntregaAgora() {
+  const endereco = enderecoDoFormulario();
+  if (!usaCalculoPorDistancia() || !endereco.rua || !endereco.numero || !endereco.bairro || !endereco.cidade) {
+    return cotacaoAtual();
+  }
+  const atual = cotacaoAtual();
+  if (atual) return atual;
+
+  const chave = chaveEndereco(endereco);
+  const minha = ++sequenciaCotacao;
+  chaveEmCalculo = chave;
+  atualizarTotalCheckout();
+
+  let resultado;
+  try {
+    const { distanciaKm, taxa } = await API.cotarEntrega(endereco);
+    resultado = { chave, distanciaKm, taxa };
+  } catch (err) {
+    resultado = { chave, erro: err.message };
+  }
+  if (minha === sequenciaCotacao) {
+    cotacaoEntrega = resultado;
+    chaveEmCalculo = null;
+    atualizarTotalCheckout();
+  }
+  return resultado;
+}
+
+// Espera o cliente parar de digitar antes de consultar.
+function agendarCotacao() {
+  clearTimeout(temporizadorCotacao);
+  atualizarTotalCheckout();
+  temporizadorCotacao = setTimeout(cotarEntregaAgora, 800);
 }
 
 function alternarCamposEndereco() {
@@ -249,6 +345,7 @@ function alternarCamposEndereco() {
     input.required = tipo === 'entrega' && input.name !== 'complemento';
   });
   atualizarTotalCheckout();
+  cotarEntregaAgora();
 }
 
 // Deixa claro que o pagamento online começa ao confirmar o pedido (escolher a opção só seleciona).
@@ -431,6 +528,22 @@ async function enviarPedido(evento) {
       bairro: form.bairro.value.trim(),
       cidade: form.cidade.value.trim()
     };
+
+    // Sem taxa calculada para este endereço o pedido não sai. Um erro anterior é tentado de novo uma vez
+    // (pode ter sido uma falha passageira na consulta).
+    if (usaCalculoPorDistancia()) {
+      if (cotacaoAtual() && cotacaoAtual().erro) cotacaoEntrega = null;
+      botao.disabled = true;
+      const cotacao = await cotarEntregaAgora();
+      botao.disabled = false;
+      if (!cotacao || cotacao.erro) {
+        const mensagem = document.createElement('div');
+        mensagem.className = 'mensagem-erro';
+        mensagem.textContent = cotacao ? cotacao.erro : 'Preencha o endereço completo para calcular a taxa de entrega.';
+        erroBox.appendChild(mensagem);
+        return;
+      }
+    }
   }
 
   const itens = Object.values(carrinho).map(({ item, quantidade, acrescimos, observacao, saches }) => ({
@@ -491,6 +604,7 @@ function configurarEventos() {
     if (quantidadeTotalCarrinho() === 0) return;
     aplicarOpcoesDaLoja();
     preencherDadosCliente();
+    agendarCotacao();
     fecharModal('modal-carrinho');
     abrirModal('modal-checkout');
   });
@@ -500,6 +614,9 @@ function configurarEventos() {
   });
 
   document.querySelectorAll('input[name="tipoEntrega"]').forEach((el) => el.addEventListener('change', alternarCamposEndereco));
+  ['rua', 'numero', 'bairro', 'cidade'].forEach((campo) => {
+    document.getElementById(`campo-${campo}`).addEventListener('input', agendarCotacao);
+  });
   document.querySelectorAll('input[name="formaPagamento"]').forEach((el) => el.addEventListener('change', atualizarBotaoConfirmar));
   document.getElementById('form-checkout').addEventListener('submit', enviarPedido);
 

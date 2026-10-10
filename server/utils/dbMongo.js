@@ -230,8 +230,22 @@ async function getClientes() {
   }));
 }
 
+// Sessões do painel na coleção "sessoes", reaproveitando a mesma conexão: o login sobrevive a deploys e
+// reinícios. O MongoDB apaga sozinho as sessões vencidas (índice TTL).
+function criarArmazenamentoSessoes(duracaoSegundos) {
+  const { MongoStore } = require('connect-mongo');
+  return MongoStore.create({
+    client,
+    dbName: banco.databaseName,
+    collectionName: 'sessoes',
+    ttl: duracaoSegundos,
+    autoRemove: 'native'
+  });
+}
+
 module.exports = {
   init,
+  criarArmazenamentoSessoes,
   getMenu, addMenuItem, updateMenuItem, deleteMenuItem,
   getAcrescimos, addAcrescimo, updateAcrescimo, deleteAcrescimo,
   getSaches, addSache, updateSache, deleteSache,

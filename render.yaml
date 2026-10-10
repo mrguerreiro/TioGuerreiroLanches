@@ -16,8 +16,10 @@ services:
         sync: false
       - key: PAGSEGURO_TOKEN
         sync: false
+      # "false" em produção (token de produção), "true" com o token de testes. Definido só no painel do Render,
+      # para uma sincronização do Blueprint nunca tirar o site do modo de produção.
       - key: PAGSEGURO_SANDBOX
-        value: "true"
+        sync: false
       # Domínio próprio (https://tioguerreirolanches.com.br). Só preencha no painel do Render depois que o
       # domínio já abrir o site, senão o endereço do Render passa a redirecionar para um domínio que não responde.
       - key: SITE_URL

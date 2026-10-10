@@ -76,11 +76,14 @@ app.use((req, res, next) => {
 // Avisos do PagBank antes do express.json: a rota precisa do corpo bruto para conferir a assinatura.
 app.use('/api/pagamentos', pagamentosRoutes);
 app.use(express.json({ limit: '8mb' }));
+// Com MongoDB, as sessões do painel ficam no banco; sem ele (desenvolvimento), ficam na memória.
+const DURACAO_SESSAO_SEGUNDOS = 60 * 60 * 8;
 app.use(session({
   secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax', secure: 'auto', maxAge: 1000 * 60 * 60 * 8 }
+  store: db.criarArmazenamentoSessoes ? db.criarArmazenamentoSessoes(DURACAO_SESSAO_SEGUNDOS) : undefined,
+  cookie: { httpOnly: true, sameSite: 'lax', secure: 'auto', maxAge: DURACAO_SESSAO_SEGUNDOS * 1000 }
 }));
 
 app.use('/api/auth', authRoutes);
@@ -121,7 +124,10 @@ db.init()
   .then(() => notificacoes.iniciar())
   .then(() => {
     app.listen(PORT, () => {
-      const modo = process.env.DATABASE_URL ? 'PostgreSQL' : 'arquivos JSON locais';
+      // Mesma ordem de escolha de utils/db.js.
+      let modo = 'arquivos JSON locais';
+      if (process.env.MONGODB_URI) modo = 'MongoDB';
+      else if (process.env.DATABASE_URL) modo = 'PostgreSQL';
       console.log(`Tio Guerreiro Lanches rodando em http://localhost:${PORT} (armazenamento: ${modo})`);
     });
   })

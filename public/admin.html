@@ -105,7 +105,8 @@
       <form id="form-novo-item">
         <div class="campos">
           <select name="categoria" required>
-            <option value="lanche">Lanche</option>
+            <option value="combo">Combo</option>
+            <option value="lanche" selected>Lanche</option>
             <option value="batata">Batatas crocantes</option>
             <option value="sobremesa">Sobremesa caseira</option>
             <option value="bebida">Bebida</option>
@@ -121,6 +122,9 @@
       <p class="texto-ajuda">Se nenhuma imagem for informada, uma imagem ilustrativa é gerada automaticamente.</p>
     </div>
 
+    <h3>Combos</h3>
+    <p class="texto-ajuda">Na descrição, diga o que vem no combo (ex.: X-Burguer + batata + refrigerante lata). O botão "Combos" só aparece no site quando houver algum cadastrado.</p>
+    <div id="lista-admin-combos"></div>
     <h3>Lanches</h3>
     <div id="lista-admin-lanches"></div>
     <h3>Batatas crocantes</h3>

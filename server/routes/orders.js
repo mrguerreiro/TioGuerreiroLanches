@@ -20,6 +20,8 @@ function notificarEmSegundoPlano(pedido) {
 }
 
 const QUANTIDADE_MAXIMA = 99;
+// Categorias que aceitam acréscimos, sachês e observação (mesma lista de public/js/app.js).
+const CATEGORIAS_PERSONALIZAVEIS = ['lanche', 'combo'];
 
 function tokenValido(recebido, esperado) {
   if (typeof recebido !== 'string' || typeof esperado !== 'string') return false;
@@ -117,9 +119,12 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ erro: `Quantidade inválida para ${produto.nome}. Use um número inteiro de 1 a ${QUANTIDADE_MAXIMA}.` });
       }
 
+      // Acréscimos, sachês e observação só para lanches e combos (que têm lanche).
+      const personalizavel = CATEGORIAS_PERSONALIZAVEIS.includes(produto.categoria);
+
       // Os acréscimos e seus preços vêm sempre do catálogo do servidor, nunca do que o cliente enviar.
       const acrescimosPedido = [];
-      if (produto.categoria === 'lanche' && Array.isArray(it.acrescimos)) {
+      if (personalizavel && Array.isArray(it.acrescimos)) {
         for (const idAcrescimo of it.acrescimos) {
           const acrescimo = catalogoAcrescimos.find((a) => a.id === idAcrescimo);
           if (!acrescimo) {
@@ -132,9 +137,9 @@ router.post('/', async (req, res) => {
         }
       }
 
-      // Sachês só para lanches, sempre pelo nome cadastrado no servidor e sem repetição.
+      // Sachês sempre pelo nome cadastrado no servidor e sem repetição.
       const sachesPedido = [];
-      if (produto.categoria === 'lanche' && Array.isArray(it.saches)) {
+      if (personalizavel && Array.isArray(it.saches)) {
         for (const idSache of it.saches) {
           const sache = catalogoSaches.find((s) => s.id === idSache);
           if (!sache) {
@@ -147,8 +152,8 @@ router.post('/', async (req, res) => {
         }
       }
 
-      // Observação livre do cliente (ex.: "não quero cebola"), só para lanches e com tamanho limitado.
-      const observacao = produto.categoria === 'lanche' && typeof it.observacao === 'string'
+      // Observação livre do cliente (ex.: "não quero cebola"), com tamanho limitado.
+      const observacao = personalizavel && typeof it.observacao === 'string'
         ? it.observacao.trim().slice(0, 140)
         : '';
 

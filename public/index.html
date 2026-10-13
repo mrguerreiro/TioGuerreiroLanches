@@ -37,6 +37,7 @@
 </div>
 
 <nav class="barra-categorias">
+  <a href="#lista-combos" class="btn-categoria" id="btn-categoria-combos" hidden>Combos</a>
   <a href="#lista-lanches" class="btn-categoria">Lanches</a>
   <a href="#lista-batatas" class="btn-categoria">Batatas crocantes</a>
   <a href="#lista-sobremesas" class="btn-categoria">Sobremesa caseira</a>
@@ -44,6 +45,13 @@
 </nav>
 
 <main>
+  <!-- Combos só aparecem (botão e seção) quando houver algum cadastrado no painel. -->
+  <section id="lista-combos" hidden>
+    <h2 class="categoria-titulo">Combos</h2>
+    <div class="grade-produtos" id="grade-combos"></div>
+    <button type="button" class="btn-voltar-topo" data-voltar-topo>⬆ Voltar ao topo</button>
+  </section>
+
   <section id="lista-lanches">
     <h2 class="categoria-titulo">Lanches</h2>
     <div class="grade-produtos" id="grade-lanches"></div>

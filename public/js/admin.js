@@ -185,6 +185,7 @@ async function carregarClientes() {
 async function carregarCardapio() {
   const menu = await API.getMenu();
   const containers = {
+    combo: document.getElementById('lista-admin-combos'),
     lanche: document.getElementById('lista-admin-lanches'),
     batata: document.getElementById('lista-admin-batatas'),
     sobremesa: document.getElementById('lista-admin-sobremesas'),
@@ -271,6 +272,7 @@ function montarItemCardapio(item) {
             <div class="campos">
               <label>Categoria
                 <select name="categoria" required>
+                  <option value="combo" ${item.categoria === 'combo' ? 'selected' : ''}>Combo</option>
                   <option value="lanche" ${item.categoria === 'lanche' ? 'selected' : ''}>Lanche</option>
                   <option value="batata" ${item.categoria === 'batata' ? 'selected' : ''}>Batatas crocantes</option>
                   <option value="sobremesa" ${item.categoria === 'sobremesa' ? 'selected' : ''}>Sobremesa caseira</option>

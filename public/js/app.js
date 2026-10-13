@@ -1,6 +1,8 @@
 let menu = [];
 let configuracoes = {};
 let acrescimosCatalogo = [];
+// Categorias que abrem acréscimos, observação e sachês (mesma lista de server/routes/orders.js).
+const CATEGORIAS_PERSONALIZAVEIS = ['lanche', 'combo'];
 let sachesCatalogo = []; // sachês gratuitos enviados junto com o lanche, cadastrados no painel
 let carrinho = {}; // { [chave]: { item, quantidade, acrescimos: [{id,nome,preco}], saches: [{id,nome}] } }
 let itemPendenteAcrescimo = null;
@@ -14,6 +16,7 @@ const formatarMoeda = (valor) => valor.toLocaleString('pt-br', { style: 'currenc
 
 function renderizarMenu() {
   const grades = {
+    combo: document.getElementById('grade-combos'),
     lanche: document.getElementById('grade-lanches'),
     batata: document.getElementById('grade-batatas'),
     sobremesa: document.getElementById('grade-sobremesas'),
@@ -41,6 +44,10 @@ function renderizarMenu() {
     grade.appendChild(card);
   }
 
+  const temCombos = grades.combo.children.length > 0;
+  document.getElementById('lista-combos').hidden = !temCombos;
+  document.getElementById('btn-categoria-combos').hidden = !temCombos;
+
   for (const grade of Object.values(grades)) {
     if (!grade.children.length) grade.innerHTML = '<p class="texto-ajuda">Em breve!</p>';
   }
@@ -54,8 +61,8 @@ function adicionarAoCarrinho(id) {
   const item = menu.find((m) => m.id === id);
   if (!item || item.pausado) return;
 
-  // Lanches sempre abrem a janela de acréscimos/observação (ex.: "não quero cebola").
-  if (item.categoria === 'lanche') {
+  // Lanches e combos (que têm lanche) sempre abrem a janela de acréscimos/observação (ex.: "não quero cebola").
+  if (CATEGORIAS_PERSONALIZAVEIS.includes(item.categoria)) {
     abrirModalAcrescimos(item);
     return;
   }

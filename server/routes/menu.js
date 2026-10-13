@@ -5,7 +5,7 @@ const { requireAdmin } = require('../middleware/auth');
 const { buildProductSvgDataUri } = require('../utils/productImage');
 const { gerarIdPorNome } = require('../utils/ids');
 
-const CATEGORIAS = ['lanche', 'batata', 'sobremesa', 'bebida'];
+const CATEGORIAS = ['combo', 'lanche', 'batata', 'sobremesa', 'bebida'];
 const MIME_SUPORTADOS = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
 const TAMANHO_MAXIMO_IMAGEM = 5 * 1024 * 1024; // 5MB
 

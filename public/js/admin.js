@@ -524,6 +524,8 @@ async function carregarConfiguracoes() {
   const config = await API.getConfiguracoes();
   const form = document.getElementById('form-config');
   form.nomeLoja.value = config.nomeLoja || '';
+  nomeLojaCupom = config.nomeLoja || '';
+  aplicarNomeLoja(config.nomeLoja);
   form.horarioFuncionamento.value = config.horarioFuncionamento || '';
   form.whatsapp.value = config.whatsapp || '';
   form.taxaEntrega.value = config.taxaEntrega || 0;

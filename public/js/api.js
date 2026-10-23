@@ -4,6 +4,15 @@ function escaparHtml(valor) {
   return String(valor ?? '').replace(/[&<>"']/g, (c) => mapa[c]);
 }
 
+// Troca o nome da loja escrito nas páginas (elementos com data-nome-loja e o título da aba) pelo das Configurações.
+const NOME_LOJA_PADRAO = 'Tio Guerreiro Lanches';
+function aplicarNomeLoja(nome) {
+  if (!nome || !String(nome).trim()) return;
+  const nomeLimpo = String(nome).trim();
+  document.querySelectorAll('[data-nome-loja]').forEach((el) => { el.textContent = nomeLimpo; });
+  document.title = document.title.replace(NOME_LOJA_PADRAO, nomeLimpo);
+}
+
 const API = {
   async _req(metodo, url, body, cabecalhosExtras) {
     const opts = {

@@ -657,6 +657,7 @@ async function iniciar() {
     [menu, configuracoes, acrescimosCatalogo, sachesCatalogo] = await Promise.all([
       API.getMenu(), API.getConfiguracoes(), API.getAcrescimos(), API.getSaches()
     ]);
+    aplicarNomeLoja(configuracoes.nomeLoja);
     renderizarMenu();
     aplicarOpcoesDaLoja();
     if (configuracoes.horarioFuncionamento) {

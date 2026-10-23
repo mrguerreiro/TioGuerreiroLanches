@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tio-guerreiro-v17';
+const CACHE_NAME = 'tio-guerreiro-v18';
 const ARQUIVOS_ESSENCIAIS = [
   './',
   'index.html',

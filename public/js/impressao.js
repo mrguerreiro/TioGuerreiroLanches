@@ -1,6 +1,9 @@
 // Impressão dos pedidos em impressora térmica (bobina de 58 mm) pelo próprio navegador.
 // Com o navegador aberto pelo atalho com --kiosk-printing, o cupom sai direto na impressora padrão, sem janela.
 
+// Nome da loja no topo do cupom; o painel preenche com o das Configurações.
+let nomeLojaCupom = '';
+
 const CHAVE_IMPRESSAO_AUTOMATICA = 'impressaoAutomatica';
 const CHAVE_PEDIDOS_IMPRESSOS = 'pedidosImpressos';
 const LIMITE_PEDIDOS_IMPRESSOS = 500;
@@ -71,7 +74,7 @@ function montarCupom(pedido) {
   .pagamento { margin-top: 4px; font-weight: bold; text-align: center; }
 </style></head>
 <body>
-  <h1>TIO GUERREIRO LANCHES</h1>
+  <h1>${escaparHtml((nomeLojaCupom || NOME_LOJA_PADRAO).toUpperCase())}</h1>
   <div class="centro">${new Date(pedido.criadoEm).toLocaleString('pt-br')}</div>
   <div class="centro">Pedido ${escaparHtml(pedido.id)}</div>
   <div class="tipo">${pedido.tipoEntrega === 'entrega' ? 'ENTREGA' : 'RETIRADA NA LOJA'}</div>

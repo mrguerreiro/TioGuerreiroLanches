@@ -128,6 +128,7 @@ async function iniciar() {
     mostrarErro('Link de acompanhamento incompleto.');
     return;
   }
+  API.getConfiguracoes().then((c) => aplicarNomeLoja(c.nomeLoja)).catch(() => {});
   await atualizar();
   setInterval(() => {
     if (!document.hidden) atualizar();

@@ -477,13 +477,19 @@ function mostrarLinkUltimoPedido() {
   try {
     ultimo = JSON.parse(localStorage.getItem('ultimoPedido'));
   } catch (err) { /* ignora */ }
+  // Mesmo link no rodapé e no botão da barra de categorias.
   const paragrafo = document.getElementById('link-ultimo-pedido');
+  const botao = document.getElementById('btn-ultimo-pedido');
   if (!ultimo || !ultimo.id || !ultimo.token) {
     paragrafo.hidden = true;
+    botao.hidden = true;
     return;
   }
-  paragrafo.querySelector('a').href = linkAcompanhamento(ultimo.id, ultimo.token);
+  const link = linkAcompanhamento(ultimo.id, ultimo.token);
+  paragrafo.querySelector('a').href = link;
+  botao.href = link;
   paragrafo.hidden = false;
+  botao.hidden = false;
 }
 
 // No app instalado, lembra nome, telefone e endereço para preencher sozinho nas próximas compras.

@@ -102,6 +102,18 @@ header.topo .titulo p.slogan {
   color: var(--vermelho);
 }
 
+/* Acompanhar último pedido: cores invertidas para não parecer uma categoria do cardápio. */
+.barra-categorias .btn-ultimo-pedido {
+  background: var(--branco);
+  color: var(--vermelho);
+}
+
+.barra-categorias .btn-ultimo-pedido:hover,
+.barra-categorias .btn-ultimo-pedido:focus-visible {
+  background: var(--vermelho);
+  color: var(--branco);
+}
+
 .btn-voltar-topo {
   display: inline-block;
   margin-top: 16px;
